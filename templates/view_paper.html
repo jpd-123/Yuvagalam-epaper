@@ -1,0 +1,35 @@
+<html lang="te">
+<head>
+    <meta charset="UTF-8">
+    <title>యువగళం ఇ-పేపర్ - పేజీలు</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; background-color: #f4f4f9; margin: 0; padding: 20px; }
+        h2 { color: #333; }
+        .page-container { margin-bottom: 30px; }
+        img { max-width: 80%; height: auto; border: 1px solid #ccc; box-shadow: 0 4px 8px rgba(0,0,0,0.1); border-radius: 5px; }
+        .whatsapp-box { margin: 40px auto; text-align: center; background: #ffffff; padding: 25px; border-radius: 10px; width: 60%; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+
+    <h2>యువగళం ఇ-పేపర్ ప్రివ్యూ</h2>
+
+    {% for image in images %}
+        <div class="page-container">
+            <img src="{{ url_for('static', filename='uploads/' + image) }}" alt="Page {{ loop.index }}">
+        </div>
+    {% endfor %}
+
+    <!-- అడ్మిన్ కోసం వాట్సాప్ షేరింగ్ సెక్షన్ -->
+    <div class="whatsapp-box">
+        <h3 style="color: #075e54;">📲 వాట్సాప్‌కి పంపండి</h3>
+        <form action="/send-all-whatsapp" method="POST" style="margin-top: 15px;">
+            <input type="text" name="whatsapp_target" placeholder="వాట్సాప్ గ్రూప్ లింక్ లేదా ఫోన్ నంబర్ (+91...)" style="width: 70%; padding: 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 6px;">
+            <button type="submit" style="background-color: #25D366; color: white; padding: 12px 20px; border: none; font-size: 16px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-left: 10px;">
+                🚀 పంపు
+            </button>
+        </form>
+    </div>
+
+</body>
+</html>

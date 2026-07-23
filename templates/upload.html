@@ -1,135 +1,83 @@
 <!DOCTYPE html>
-<html>
+<html lang="te">
 <head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
+    <title>యువగళం - ఈ-పేపర్ అప్‌లోడ్</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; background: #f4f4f4; margin: 0; padding: 20px; }
-        .header-bar { display: flex; justify-content: space-between; align-items: center; max-width: 800px; margin: 0 auto 20px auto; background: white; padding: 10px 20px; border-radius: 8px; box-shadow: 0px 0px 5px rgba(0,0,0,0.1); }
-        .upload-box { background: white; padding: 20px; border-radius: 8px; display: inline-block; box-shadow: 0px 0px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        .page-container { margin: 20px auto; width: 90%; max-width: 800px; background: white; padding: 20px; border-radius: 8px; border: 2px solid #ddd; box-shadow: 0px 0px 10px rgba(0,0,0,0.1); }
-        .crop-img { max-width: 100%; display: block; }
-        .controls { display: flex; gap: 10px; margin-top: 10px; justify-content: center; flex-wrap: wrap; }
-        button, input[type="file"] { padding: 10px; font-size: 16px; }
-        button { cursor: pointer; border: none; color: white; font-weight: bold; border-radius: 5px; }
-        .btn-crop { background: #007bff; }
-        .btn-download { background: #28a745; display: none; }
-        .btn-whatsapp { background: #25D366; display: none; text-decoration: none; padding: 10px 15px; border-radius: 5px; color: white; font-weight: bold; font-size: 16px; }
-        .btn-submit { background: #ffc107; color: black; }
-        .auth-btn { background: #dc3545; padding: 5px 15px; font-size: 14px; text-decoration: none; color: white; border-radius: 4px; }
-        .login-link { background: #28a745; padding: 5px 15px; font-size: 14px; text-decoration: none; color: white; border-radius: 4px; }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        .container {
+            max-width: 600px;
+            background: white;
+            margin: 30px auto;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #1a252f;
+            margin-bottom: 10px;
+        }
+        p {
+            color: #666;
+            font-size: 14px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            margin: 15px 0;
+            font-size: 15px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .note {
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #495057;
+            margin-top: 15px;
+            text-align: left;
+        }
     </style>
 </head>
 <body>
-    <div class="header-bar">
-        <h2>యువగళం ఈ-పేపర్</h2>
-        <div>
-            {% if logged_in %}
-                <a href="/logout" class="auth-btn">లాగౌట్</a>
-            {% else %}
-                <a href="/login" class="login-link">అడ్మిన్ లాగిన్</a>
-            {% endif %}
-        </div>
-    </div>
 
-    {% if logged_in %}
-    <div class="upload-box">
-        <h3>కొత్త పిడిఎఫ్ అప్లోడ్ చేయండి</h3>
-        <form action="/" method="POST" enctype="multipart/form-data">
-            <input type="file" name="file" accept=".pdf" required>
-            <button type="submit" class="btn-submit">అప్లోడ్ చేయి</button>
+    <div class="container">
+        <h2>📰 యువగళం ఈ-పేపర్ అప్‌లోడ్</h2>
+        <p>మీ సబ్ ఎడిటర్ పంపిన 8 పేజీల PDF గూగుల్ డ్రైవ్ లింక్‌ను ఇక్కడ పేస్ట్ చేయండి.</p>
+
+        <form action="/process-url" method="POST">
+            <input type="text" name="drive_url" placeholder="గూగుల్ డ్రైవ్ PDF లింక్ ఇక్కడ పేస్ట్ చేయండి..." required>
+            <button type="submit">ఈ-పేపర్ ప్రాసెస్ చేయి & ప్రివ్యూ చూడు 🚀</button>
         </form>
-    </div>
-    {% endif %}
 
-    <h3>అన్ని పేజీలు / వార్తలు</h3>
-    {% if images %}
-        {% for img in images %}
-        <div class="page-container" id="container-{{ loop.index0 }}">
-            <img src="{{ url_for('static', filename='output/' + img) }}" class="crop-img" id="img-{{ loop.index0 }}">
-            <div class="controls">
-                <button class="btn-crop" onclick="enableCrop('{{ loop.index0 }}')">వార్తను క్రాప్ చేయి</button>
-                <button class="btn-download" id="btn-save-{{ loop.index0 }}" onclick="saveImage('{{ loop.index0 }}')">డౌన్‌లోడ్ చేయి</button>
-                <a id="btn-wa-{{ loop.index0 }}" class="btn-whatsapp" target="_blank">వాట్సాప్‌లో పంపు</a>
-            </div>
+        <div class="note">
+            📌 <b>గమనిక:</b> గూగుల్ డ్రైవ్ లింక్ పర్మిషన్ <b>'Anyone with the link'</b> అని ఉండేలా చూసుకోండి.
         </div>
-        {% endfor %}
-    {% else %}
-        <p>ఇంకా ఎలాంటి పేపర్లు అప్‌లోడ్ చేయబడలేదు.</p>
-    {% endif %}
+    </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-    <script>
-        const croppers = {};
-
-        function enableCrop(id) {
-            const img = document.getElementById('img-' + id);
-            croppers[id] = new Cropper(img, { viewMode: 1 });
-            document.getElementById('btn-save-' + id).style.display = 'block';
-            event.target.style.display = 'none';
-        }
-
-        function saveImage(id) {
-            const cropper = croppers[id];
-            const canvas = cropper.getCroppedCanvas({
-                imageSmoothingEnabled: true,
-                imageSmoothingQuality: 'high'
-            });
-
-            // హెడర్ హైట్ (padding) తగ్గించబడింది మరియు లోగో పెద్దదిగా కనిపించేలా సెట్ చేయబడింది
-            const padding = canvas.width * 0.14; 
-
-            const newCanvas = document.createElement('canvas');
-            newCanvas.width = canvas.width;
-            newCanvas.height = canvas.height + padding;
-
-            const ctx = newCanvas.getContext('2d');
-            ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = 'high';
-
-            // లోగో బ్యాక్‌గ్రౌండ్ స్కై బ్లూ కలర్
-            ctx.fillStyle = "#00bfff"; 
-            ctx.fillRect(0, 0, newCanvas.width, padding);
-
-            ctx.fillStyle = "#ffffff";
-            ctx.fillRect(0, padding, newCanvas.width, canvas.height);
-
-            // నేటి తేదీని ఆటోమేటిక్‌గా ప్రింట్ చేయడం
-            const today = new Date();
-            const dateStr = today.toLocaleDateString('te-IN', { year: 'numeric', month: 'long', day: 'numeric' });
-            ctx.fillStyle = "#000000";
-            ctx.font = "bold 18px Arial";
-            ctx.textAlign = "right";
-            ctx.fillText("తేదీ: " + dateStr, newCanvas.width - 25, padding - 15);
-
-            ctx.drawImage(canvas, 0, padding);
-
-            const logo = new Image();
-            logo.src = "{{ url_for('static', filename='logo.jpeg') }}";
-
-            logo.onload = function() {
-                // లోగో సైజ్ (విడ్త్ మరియు హైట్) పెద్దదిగా ఉండేలా సెట్ చేయబడింది
-                const logoHeight = padding * 0.88;
-                const logoWidth = (logo.width / logo.height) * logoHeight;
-                const x = (newCanvas.width - logoWidth) / 2;
-                const y = (padding - logoHeight) / 2;
-                
-                ctx.drawImage(logo, x, y, logoWidth, logoHeight);
-
-                const dataUrl = newCanvas.toDataURL('image/png');
-                
-                // ఆటోమేటిక్ డౌన్‌లోడ్
-                const link = document.createElement('a');
-                link.download = 'YuvaGalam-News.png';
-                link.href = dataUrl;
-                link.click();
-
-                // వాట్సాప్ షేర్ లింక్ ఆక్టివేట్ చేయడం
-                const waButton = document.getElementById('btn-wa-' + id);
-                waButton.href = "https://api.whatsapp.com/send?text=యువగళం తాజా వార్త చూడండి!";
-                waButton.style.display = "inline-block";
-            };
-        }
-    </script>
 </body>
 </html>
