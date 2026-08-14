@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { getActiveLayout } from './services/storage';
-import { attachShortcutHandler } from './utils/keyboardShortcuts';
+// import { attachShortcutHandler } from './utils/keyboardShortcuts';
 
 export default function DailyEditor() {
   var layout = getActiveLayout();
