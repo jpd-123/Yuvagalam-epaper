@@ -1,54 +1,37 @@
 import React, { useState } from 'react';
 import Dashboard from './Dashboard';
-import MasterLayoutbuilder from './MasterLayoutbuilder';
-import DailyEditor from './DailyEditor';
-import SingleClippingEditor from './SingleClippingEditor';
+import MasterLayoutbuilder from './MasterLayoutbuilder'; // మీ మాస్టర్ లేఅవుట్ కాంపోనెంట్ పేరు
+import SingleClippingEditor from './SingleClippingEditor'; // మీ క్లిప్పింగ్ కాంపోనెంట్ పేరు
 
 export default function App() {
-  // వర్క్‌స్పేస్ వీక్షణలు: 'dashboard', 'builder', 'editor', 'clipping'
-  const [currentView, setCurrentView] = useState('dashboard');
-  const [activeLayout, setActiveLayout] = useState(null);
-
-  // డాష్‌బోర్డ్ నుండి మాస్టర్ లేఅవుట్ ఎంచుకున్నప్పుడు
-  const handleSelectLayout = (layoutData) => {
-    setActiveLayout(layoutData);
-    setCurrentView('editor');
-  };
+  const [currentView, setCurrentView] = useState('dashboard'); // 'dashboard', 'master', 'clipping'
+  const [selectedLayout, setSelectedLayout] = useState(null);
 
   return (
-    <div style={{ width: '100vw', height: '100vh', overflow: 'hidden' }}>
-      
-      {/* 1. డాష్‌బోర్డ్ వీక్షణ */}
+    <div>
       {currentView === 'dashboard' && (
         <Dashboard 
-          onSelectLayout={handleSelectLayout}
-          onCreateNewLayout={() => setCurrentView('builder')}
+          onCreateNewLayout={() => setCurrentView('master')}
           onOpenClippingEditor={() => setCurrentView('clipping')}
+          onSelectLayout={(layout) => {
+            setSelectedLayout(layout);
+            setCurrentView('master');
+          }}
         />
       )}
 
-      {/* 2. మాస్టర్ లేఅవుట్ డిజైనర్ వీక్షణ */}
-      {currentView === 'builder' && (
+      {currentView === 'master' && (
         <MasterLayoutbuilder 
           onBackToDashboard={() => setCurrentView('dashboard')}
+          selectedLayout={selectedLayout}
         />
       )}
 
-      {/* 3. రోజువారీ వార్తా ఎడిటర్ వీక్షణ */}
-      {currentView === 'editor' && (
-        <DailyEditor 
-          masterLayoutData={activeLayout}
-          onBackToDashboard={() => setCurrentView('dashboard')}
-        />
-      )}
-
-      {/* 4. సింగిల్ న్యూస్ క్లిప్పింగ్ మేకర్ వీక్షణ */}
       {currentView === 'clipping' && (
         <SingleClippingEditor 
           onBackToDashboard={() => setCurrentView('dashboard')}
         />
       )}
-
     </div>
   );
 }
