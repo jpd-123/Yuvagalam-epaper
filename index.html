@@ -60,7 +60,7 @@
         .btn-process:hover {
             background-color: #990000;
         }
-        /* Paper Viewer Area */
+        /* Paper Viewer Section */
         #viewer-section {
             display: none;
             margin-top: 20px;
@@ -102,7 +102,7 @@
 </head>
 <body>
 
-    <!-- Upload Card Interface (మీరు కోరిన 4వ స్క్రీన్‌షాట్ మోడల్) -->
+    <!-- Upload Interface -->
     <div class="upload-card" id="upload-card">
         <h2>యువగళం ఈ-పేపర్ అప్‌లోడ్</h2>
         
@@ -117,7 +117,7 @@
         <button class="btn-process" onclick="processEpaper()">ఈ-పేపర్ ప్రాసెస్ చేయండి</button>
     </div>
 
-    <!-- Viewer Area (అప్‌లోడ్ చేసిన తర్వాత కనిపిస్తుంది) -->
+    <!-- Viewer Section -->
     <div id="viewer-section">
         <div class="controls">
             <button class="btn-action" id="prev-page">గత పేజీ</button>
@@ -141,6 +141,7 @@
             const driveLink = document.getElementById('drive-link').value.trim();
 
             if (fileInput.files.length > 0) {
+                // నేరుగా PDF ఫైల్ ఎంచుకుంటే
                 const file = fileInput.files[0];
                 const fileReader = new FileReader();
                 fileReader.onload = function() {
@@ -149,7 +150,19 @@
                 };
                 fileReader.readAsArrayBuffer(file);
             } else if (driveLink !== "") {
-                alert("Google Drive లింక్ ప్రాసెస్ చేయబడుతోంది... (PDF డైరెక్ట్ లింక్ ని సపోర్ట్ చేస్తుంది)");
+                // Google Drive లింక్ ఇస్తే - డైరెక్ట్ డౌన్‌లోడ్ లింక్‌గా మార్చి లోడ్ చేయడం
+                let fileId = "";
+                const match = driveLink.match(/\/d\/([a-zA-Z0-9_-]+)/);
+                if (match && match[1]) {
+                    fileId = match[1];
+                }
+
+                if (fileId) {
+                    const directUrl = `https://docs.google.com/uc?export=download&id=${fileId}`;
+                    loadPDFUrl(directUrl);
+                } else {
+                    alert("చెల్లుబాటు అయ్యే Google Drive లింక్ ఎంటర్ చేయండి!");
+                }
             } else {
                 alert("దయచేసి ఒక PDF ఫైల్‌ను ఎంచుకోండి లేదా Google Drive లింక్‌ను ఇవ్వండి.");
             }
@@ -165,6 +178,19 @@
                 renderPage(pageNum);
             }).catch(function(error) {
                 alert("PDF లోడ్ చేయడంలో విఫలమైంది: " + error.message);
+            });
+        }
+
+        function loadPDFUrl(url) {
+            pdfjsLib.getDocument(url).promise.then(function(pdf) {
+                pdfDoc = pdf;
+                document.getElementById('page-count').textContent = pdf.numPages;
+                document.getElementById('upload-card').style.display = 'none';
+                document.getElementById('viewer-section').style.display = 'block';
+                pageNum = 1;
+                renderPage(pageNum);
+            }).catch(function(error) {
+                alert("Google Drive నుండి PDF లోడ్ కాలేదు. దయచేసి Drive Link 'Anyone with the link' (పబ్లిక్) గా ఉందో లేదో చూడండి లేదా నేరుగా PDF File అప్‌లోడ్ చేయండి.");
             });
         }
 
@@ -191,7 +217,7 @@
             renderPage(pageNum);
         });
 
-        // లోగోతో డౌన్‌లోడ్ చేసే ఫంక్షన్ (హిడెన్ బ్యాక్‌అప్ లోగోతో ఎర్రర్ రాకుండా)
+        // వార్తను పైన లోగోతో డౌన్‌లోడ్ చేసే లాజిక్
         document.getElementById('crop-download-btn').addEventListener('click', function() {
             if (!pdfDoc) return;
 
@@ -200,7 +226,6 @@
             
             const logo = new Image();
             logo.crossOrigin = "Anonymous";
-            // మీ లోగో ఫైల్ పేరు
             logo.src = 'logo.png.jpg'; 
 
             logo.onload = function() {
@@ -225,7 +250,6 @@
             };
 
             logo.onerror = function() {
-                // లోగో ఇమేజ్ సరిగ్గా దొరకకపోతే టెక్స్ట్ లోగో హెడర్ వేస్తుంది
                 const logoHeaderHeight = 90;
                 tempCanvas.width = canvas.width;
                 tempCanvas.height = canvas.height + logoHeaderHeight;
