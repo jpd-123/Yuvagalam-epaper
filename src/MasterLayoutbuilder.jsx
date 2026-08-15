@@ -1,378 +1,400 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
-export default function MasterLayoutbuilder({ onBackToDashboard }) {
-  // 1. పేజీ ఆప్షన్స్
-  const [pageSize, setPageSize] = useState('A3');
-  const [borderStyle, setBorderStyle] = useState('double');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(4); // default 4 pages, expandable to 16
+export default function MasterLayoutbuilder({ onBackToDashboard, selectedLayout }) {
+  // 1. పేజీ ఆకృతి & సెటప్ కంట్రోలర్లు (మొదట్లోనే ఫిక్స్ కాకుండా యూజర్ ఎంచుకోవడానికి)
+  const [pageSize, setPageSize] = useState(selectedLayout?.size || 'A3');
+  const [columnCount, setColumnCount] = useState(selectedLayout?.columns || 4);
+  const [borderStyle, setBorderStyle] = useState(selectedLayout?.border || 'డబుల్ లైన్');
+  const [borderColor, setBorderColor] = useState('#000000');
+  const [pageBgColor, setPageBgColor] = useState('#ffffff');
 
-  // 2. లోగో కంట్రోల్స్ (మాక్సిమం వెడల్పు పెంచబడింది)
-  const [logoUrl, setLogoUrl] = useState(null);
-  const [logoWidth, setLogoWidth] = useState(500);
-  const [logoHeight, setLogoHeight] = useState(90);
+  // 2. టూల్‌బార్ అకార్డియన్ విభాగాలు (గందరగోళం లేకుండా ఓపెన్/క్లోజ్)
+  const [activeSection, setActiveSection] = useState('pageSetup'); 
 
-  // 3. హెడర్ (సంపుటి, సంచిక) ఐడెంటిటీ లైన్
-  const [headerStyle, setHeaderStyle] = useState('style1');
-  const [editionNo, setEditionNo] = useState('1');
-  const [issueNo, setIssueNo] = useState('105');
-  const [place, setPlace] = useState('అమరావతి');
-  const [date, setDate] = useState('సోమవారం, 10 ఆగస్టు 2026');
-  const [price, setPrice] = useState('5.00');
+  // 3. లోగో & హెడర్ మోడల్స్ (10 రకాల హెడర్ స్టైల్స్ కి పునాది)
+  const [logo, setLogo] = useState(null);
+  const [logoWidth, setLogoWidth] = useState(250);
+  const [logoHeight, setLogoHeight] = useState(80);
+  const [logoAlign, setLogoAlign] = useState('center');
+  const [paperTitle, setPaperTitle] = useState('యువగళం దినపత్రిక');
+  const [titleFont, setTitleFont] = useState("'Ramabhadra', sans-serif");
+  const [titleColor, setTitleColor] = useState('#000000');
+  const [titleBg, setTitleBg] = useState('transparent');
+  const [subHeaderInfo, setSubHeaderInfo] = useState('సంపుటి: 5 | సంచిక: 120 | అమరావతి | ఆదివారం, 15 ఆగస్టు 2026');
 
-  // 4. బాటమ్ ప్రెస్ మార్కులు
-  const [showBottomMarks, setShowBottomMarks] = useState(true);
+  // 4. వార్తల వివరాలు & రియాక్టర్ / మోడల్ ఎంపిక
+  const [newsModel, setNewsModel] = useState('classic'); // 'classic', 'card', 'highlight', 'interview'
+  const [mainHeadline, setMainHeadline] = useState('రాష్ట్రంలో ఘనంగా స్వాతంత్ర్య దినోత్సవ వేడుకలు');
+  const [headFont, setHeadFont] = useState("'Ramabhadra', sans-serif");
+  const [headSize, setHeadSize] = useState(32);
+  const [headBg, setHeadBg] = useState('transparent');
+  const [headColor, setHeadColor] = useState('#0b1b6e');
+  const [subHeadline, setSubHeadline] = useState('ముఖ్యమంత్రి జాతీయ పతాకావిష్కరణ.. అధికారులకు అవార్డుల ప్రదానం');
+  const [subBg, setSubBg] = useState('#fef3c7');
+  const [subColor, setSubColor] = useState('#000000');
+  const [subBullet, setSubBullet] = useState('➔');
 
-  // 5. లేఅవుట్ సేవ్ మేనేజ్‌మెంట్
-  const [layoutName, setLayoutName] = useState('యువగళం మెయిన్ మాస్టర్');
+  // 5. బాడీ టెక్స్ట్ & స్పేసింగ్ కంట్రోలర్లు
+  const [dateLine, setDateLine] = useState('అమరావతి, ఆగస్టు 15 (యువగళం):');
+  const [bodyText, setBodyText] = useState(
+    'రాష్ట్రవ్యాప్తంగా 80వ స్వాతంత్ర్య దినోత్సవ వేడుకలు అంబరాన్నంటాయి. ముఖ్యమంత్రి జాతీయ పతాకాన్ని ఆవిష్కరించి పోలీసుల గౌరవ వందనం స్వీకరించారు. రాష్ట్ర ప్రజలకు శుభాకాంక్షలు తెలుపుతూ అభివృద్ధి పథకాలను వివరించారు. ఈ సందర్భంగా వివిధ రంగాల్లో ఉత్తమ సేవలుందించిన అధికారులకు అవార్డులను ప్రధానం చేశారు.'
+  );
+  const [bodyFontSize, setBodyFontSize] = useState(14);
+  const [bodyTextColor, setBodyTextColor] = useState('#000000');
+  const [lineSpacing, setLineSpacing] = useState(1.6);
+  const [paragraphGap, setParagraphGap] = useState(12);
 
-  // వాట్సాప్ / ఇమేజ్ పేస్ట్ హ్యాండ్లర్ (Ctrl + V)
-  const handlePasteImage = (e) => {
-    const items = e.clipboardData?.items;
-    if (items) {
-      for (let item of items) {
-        if (item.type.indexOf('image') !== -1) {
-          const file = item.getAsFile();
-          setLogoUrl(URL.createObjectURL(file));
-          break;
+  // 6. ఫోటోలు & కంట్రోల్స్ (WhatsApp Ctrl+V + 6 Shapes)
+  const [photos, setPhotos] = useState([]);
+  const [activePhotoIdx, setActivePhotoIdx] = useState(0);
+
+  // కలర్ ప్యాలెట్లు & ఫాంట్లు
+  const textColors12 = ['#ffffff', '#000000', '#0b1b6e', '#8b0000', '#006400', '#4b0082', '#800000', '#000080', '#5c4033', '#004d40', '#b91c1c', '#1e3a8a'];
+  const darkColors = ['#0b1b6e', '#8b0000', '#006400', '#000000', '#4b0082', '#800000', '#000080', '#5c4033', '#004d40', '#333333'];
+  const lightColors = ['#fef3c7', '#e0f2fe', '#fce7f3', '#dcfce7', '#ffedd5', '#f3f4f6', '#fffbeb', '#f3e8ff', '#cffafe', 'transparent'];
+  
+  const fontStyles = [
+    { name: 'రామభద్ర (Ramabhadra)', value: "'Ramabhadra', sans-serif" },
+    { name: 'మండలి (Mandali)', value: "'Mandali', sans-serif" },
+    { name: 'గిడుగు (Gidugu)', value: "'Gidugu', sans-serif" },
+    { name: 'సురవరం (Suravanna)', value: "'Suravanna', serif" },
+    { name: 'ఎన్టీఆర్ (NTR)', value: "'NTR', sans-serif" },
+    { name: 'గురజాడ (Gurazada)', value: "'Gurazada', serif" },
+    { name: 'పెద్దన (Peddana)', value: "'Peddana', serif" },
+    { name: 'నోటో శాన్స్ (Noto Sans)', value: "'Noto Sans Telugu', sans-serif" }
+  ];
+
+  // వాట్సాప్ (Ctrl+V) పేస్ట్ సపోర్ట్
+  useEffect(() => {
+    const handlePaste = (e) => {
+      const clipboardData = e.clipboardData || window.clipboardData;
+      if (!clipboardData) return;
+      const items = clipboardData.items;
+      if (!items) return;
+
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf('image') !== -1) {
+          const blob = items[i].getAsFile();
+          if (!blob) continue;
+
+          if (photos.length >= 4) {
+            alert('గరిష్టం 4 ఫోటోలు మాత్రమే అనుమతించబడతాయి!');
+            return;
+          }
+          const newPhoto = {
+            url: URL.createObjectURL(blob),
+            shape: 'box',
+            size: 200,
+            zoom: 100,
+            panX: 50,
+            panY: 50,
+            align: 'left',
+            showCaption: true,
+            caption: 'ఫోటో వివరణ'
+          };
+          setPhotos(prev => [...prev, newPhoto]);
+          alert('వాట్సాప్ ఇమేజ్ అప్‌లోడ్ అయింది!');
         }
       }
-    }
-  };
-
-  const handleLogoUpload = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      setLogoUrl(URL.createObjectURL(e.target.files[0]));
-    }
-  };
-
-  const handleSaveMasterLayout = () => {
-    const masterData = {
-      name: layoutName,
-      pageSize,
-      borderStyle,
-      totalPages,
-      logoUrl,
-      logoWidth,
-      logoHeight,
-      headerStyle,
-      editionNo,
-      issueNo,
-      place,
-      date,
-      price,
-      showBottomMarks
     };
-    alert(`${layoutName} మాస్టర్ లేఅవుట్ విజయవంతంగా సేవ్ అయ్యింది!`);
-    console.log('Saved Master Layout:', masterData);
+    window.addEventListener('paste', handlePaste);
+    return () => window.removeEventListener('paste', handlePaste);
+  }, [photos]);
+
+  const handleFileUpload = (e, target) => {
+    const files = Array.from(e.target.files);
+    if (target === 'logo' && files[0]) {
+      setLogo(URL.createObjectURL(files[0]));
+    }
+    if (target === 'photo') {
+      if (photos.length + files.length > 4) {
+        alert('గరిష్టం 4 ఫోటోలు అనుమతం!');
+        return;
+      }
+      const newPhotos = files.map(f => ({
+        url: URL.createObjectURL(f),
+        shape: 'box',
+        size: 200,
+        zoom: 100,
+        panX: 50,
+        panY: 50,
+        align: 'left',
+        showCaption: true,
+        caption: ''
+      }));
+      setPhotos(prev => [...prev, ...newPhotos]);
+    }
+  };
+
+  const updatePhotoSetting = (key, value) => {
+    if (photos.length === 0) return;
+    const updated = [...photos];
+    updated[activePhotoIdx] = { ...updated[activePhotoIdx], [key]: value };
+    setPhotos(updated);
+  };
+
+  // ఆటో-ఫిట్ ఎంబెడెడ్ ఇంజిన్ (ఎక్కడా ఖాళీ లేకుండా సర్దుబాటు)
+  const handleAutoFit = () => {
+    setBodyFontSize(15);
+    setLineSpacing(1.75);
+    setParagraphGap(16);
+    setHeadSize(34);
+    alert('✨ ఆటో-ఫిట్ సిస్టమ్ ఖాళీలను గుర్తించి పర్ఫెక్ట్‌గా లేఅవుట్ సర్దుబాటు చేసింది!');
+  };
+
+  const toggleSection = (sec) => setActiveSection(activeSection === sec ? null : sec);
+
+  const getPhotoShapeStyle = (shape) => {
+    switch (shape) {
+      case 'circle': return { borderRadius: '50%' };
+      case 'v-oval': return { borderRadius: '50% / 35%' };
+      case 'h-oval': return { borderRadius: '35% / 50%' };
+      case 'rounded': return { borderRadius: '16px' };
+      case 'capsule': return { borderRadius: '50px' };
+      default: return { borderRadius: '0px' };
+    }
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: '#0f172a', color: '#fff', fontFamily: 'sans-serif' }} onPaste={handlePasteImage}>
+    <div style={{ display: 'flex', gap: '20px', padding: '15px', backgroundColor: '#0f172a', minHeight: '100vh', color: '#fff', fontFamily: 'sans-serif' }}>
       
-      {/* టాప్ నావిగేషన్ బార్ */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px', backgroundColor: '#1e293b', borderBottom: '1px solid #334155' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-          {onBackToDashboard && (
-            <button onClick={onBackToDashboard} style={{ backgroundColor: '#475569', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer' }}>
-              ⬅️ డాష్‌బోర్డ్
-            </button>
-          )}
-          <h2 style={{ margin: 0, fontSize: '18px' }}>🛠️ సాత్విక మాస్టర్ లేఅవుట్ డిజైనర్</h2>
-        </div>
+      {/* ఎడమ వైపు: అకార్డియన్ కస్టమ్‌ టూల్‌బార్ */}
+      <div style={{ width: '420px', backgroundColor: '#1e293b', padding: '15px', borderRadius: '8px', border: '1px solid #334155', maxHeight: '95vh', overflowY: 'auto' }}>
         
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <input 
-            type="text" 
-            value={layoutName} 
-            onChange={(e) => setLayoutName(e.target.value)} 
-            placeholder="మాస్టర్ పేరు ఎంటర్ చేయండి"
-            style={{ padding: '6px 10px', borderRadius: '4px', border: '1px solid #64748b', outline: 'none', color: '#000' }}
-          />
-          <button onClick={handleSaveMasterLayout} style={{ backgroundColor: '#16a34a', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}>
-            💾 మాస్టర్ సేవ్ చేయండి
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+          <button onClick={onBackToDashboard} style={{ backgroundColor: '#475569', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>
+            ⬅ డ్యాష్‌బోర్డ్
+          </button>
+          <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#facc15' }}>మాస్టర్ లేఅవుట్ ఇంజిన్</span>
+        </div>
+
+        {/* 1. పేజీ ఆకృతి & పరిమాణం సెటప్ */}
+        <div style={{ marginBottom: '8px', backgroundColor: '#0f172a', borderRadius: '6px', overflow: 'hidden' }}>
+          <button onClick={() => toggleSection('pageSetup')} style={{ width: '100%', padding: '10px', textAlign: 'left', backgroundColor: '#1e293b', border: 'none', color: '#38bdf8', fontWeight: 'bold', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}>
+            <span>1. పేజీ సెటప్ (సైజు & బోర్డర్లు)</span>
+            <span>{activeSection === 'pageSetup' ? '▲' : '▼'}</span>
+          </button>
+          {activeSection === 'pageSetup' && (
+            <div style={{ padding: '10px', fontSize: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div>
+                <label>పేపర్ సైజు ఎంపిక: </label>
+                <select value={pageSize} onChange={(e) => setPageSize(e.target.value)} style={{ width: '100%', padding: '5px', backgroundColor: '#334155', color: '#fff', border: 'none', borderRadius: '4px' }}>
+                  <option value="A3">A3 ఎడిషన్</option>
+                  <option value="Broadsheet">Broadsheet జంబో పేపర్</option>
+                  <option value="Tabloid">Tabloid చిన్న పేపర్</option>
+                </select>
+              </div>
+              <div>
+                <label>వార్తా గ్రిడ్ కాలమ్స్ (Columns): </label>
+                <select value={columnCount} onChange={(e) => setColumnCount(Number(e.target.value))} style={{ width: '100%', padding: '5px', backgroundColor: '#334155', color: '#fff', border: 'none', borderRadius: '4px' }}>
+                  <option value={1}>1 కాలమ్</option>
+                  <option value={2}>2 కాలమ్స్</option>
+                  <option value={3}>3 కాలమ్స్</option>
+                  <option value={4}>4 కాలమ్స్</option>
+                  <option value={5}>5 కాలమ్స్</option>
+                  <option value={8}>8 కాలమ్స్ (Broadsheet)</option>
+                </select>
+              </div>
+              <div>
+                <label>బోర్డర్ శైలి: </label>
+                <select value={borderStyle} onChange={(e) => setBorderStyle(e.target.value)} style={{ width: '100%', padding: '5px', backgroundColor: '#334155', color: '#fff', border: 'none', borderRadius: '4px' }}>
+                  <option value="డబుల్ లైన్">డబుల్ లైన్ (Double)</option>
+                  <option value="సింగిల్ లైన్">సింగిల్ లైన్ (Single)</option>
+                  <option value="బోర్డర్ లేదు">బోర్డర్ లేదు (None)</option>
+                </select>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* 2. లోగో & హెడర్ డిజైన్ సెట్టింగ్స్ */}
+        <div style={{ marginBottom: '8px', backgroundColor: '#0f172a', borderRadius: '6px', overflow: 'hidden' }}>
+          <button onClick={() => toggleSection('headerSetup')} style={{ width: '100%', padding: '10px', textAlign: 'left', backgroundColor: '#1e293b', border: 'none', color: '#38bdf8', fontWeight: 'bold', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}>
+            <span>2. లోగో & మాస్టర్ హెడర్</span>
+            <span>{activeSection === 'headerSetup' ? '▲' : '▼'}</span>
+          </button>
+          {activeSection === 'headerSetup' && (
+            <div style={{ padding: '10px', fontSize: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div>
+                <label>లోగో అప్‌లోడ్ (లేదా Ctrl+V పేస్ట్):</label>
+                <input type="file" onChange={(e) => handleFileUpload(e, 'logo')} style={{ width: '100%', marginTop: '4px' }} />
+              </div>
+              <div>
+                <label>పత్రిక పేరు (Title): </label>
+                <input type="text" value={paperTitle} onChange={(e) => setPaperTitle(e.target.value)} style={{ width: '100%', padding: '5px', backgroundColor: '#334155', color: '#fff', border: '1px solid #475569', borderRadius: '4px' }} />
+              </div>
+              <div>
+                <label>సంపుటి / తేదీ ఐడెంటిటీ: </label>
+                <input type="text" value={subHeaderInfo} onChange={(e) => setSubHeaderInfo(e.target.value)} style={{ width: '100%', padding: '5px', backgroundColor: '#334155', color: '#fff', border: '1px solid #475569', borderRadius: '4px' }} />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* 3. వార్తా రియాక్టర్ / మోడల్ ఎంపిక (News Layout Models) */}
+        <div style={{ marginBottom: '8px', backgroundColor: '#0f172a', borderRadius: '6px', overflow: 'hidden' }}>
+          <button onClick={() => toggleSection('newsModel')} style={{ width: '100%', padding: '10px', textAlign: 'left', backgroundColor: '#1e293b', border: 'none', color: '#38bdf8', fontWeight: 'bold', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}>
+            <span>3. వార్తా శైలులు / మోడల్స్ (Reactors)</span>
+            <span>{activeSection === 'newsModel' ? '▲' : '▼'}</span>
+          </button>
+          {activeSection === 'newsModel' && (
+            <div style={{ padding: '10px', fontSize: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <label>వార్తా లేఅవుట్ మోడల్ ఎంచుకోండి:</label>
+              <select value={newsModel} onChange={(e) => setNewsModel(e.target.value)} style={{ width: '100%', padding: '6px', backgroundColor: '#334155', color: '#fff', border: 'none', borderRadius: '4px' }}>
+                <option value="classic">1. క్లాసిక్ న్యూస్ మోడల్ (Standard)</option>
+                <option value="card">2. బాక్స్ / కార్డ్ మోడల్ (Border Box)</option>
+                <option value="highlight">3. హైలైట్ కలర్ మోడల్ (Full Color BG)</option>
+                <option value="interview">4. స్పెషల్ ఇంటర్వ్యూ మోడల్ (Quote Box)</option>
+              </select>
+            </div>
+          )}
+        </div>
+
+        {/* 4. ప్రధాన శీర్షిక & కంటెంట్ కంట్రోల్స్ */}
+        <div style={{ marginBottom: '8px', backgroundColor: '#0f172a', borderRadius: '6px', overflow: 'hidden' }}>
+          <button onClick={() => toggleSection('contentCtrl')} style={{ width: '100%', padding: '10px', textAlign: 'left', backgroundColor: '#1e293b', border: 'none', color: '#38bdf8', fontWeight: 'bold', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}>
+            <span>4. శీర్షికలు & వార్తా వచనం</span>
+            <span>{activeSection === 'contentCtrl' ? '▲' : '▼'}</span>
+          </button>
+          {activeSection === 'contentCtrl' && (
+            <div style={{ padding: '10px', fontSize: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div>
+                <label>ప్రధాన శీర్షిక:</label>
+                <input type="text" value={mainHeadline} onChange={(e) => setMainHeadline(e.target.value)} style={{ width: '100%', padding: '5px', backgroundColor: '#334155', color: '#fff', border: '1px solid #475569', borderRadius: '4px' }} />
+              </div>
+              <div>
+                <label>ఉప శీర్షిక (Sub-Headline):</label>
+                <input type="text" value={subHeadline} onChange={(e) => setSubHeadline(e.target.value)} style={{ width: '100%', padding: '5px', backgroundColor: '#334155', color: '#fff', border: '1px solid #475569', borderRadius: '4px' }} />
+              </div>
+              <div>
+                <label>డేట్‌లైన్:</label>
+                <input type="text" value={dateLine} onChange={(e) => setDateLine(e.target.value)} style={{ width: '100%', padding: '5px', backgroundColor: '#334155', color: '#fff', border: '1px solid #475569', borderRadius: '4px' }} />
+              </div>
+              <div>
+                <label>ప్రధాన వార్తా పాఠం:</label>
+                <textarea rows={4} value={bodyText} onChange={(e) => setBodyText(e.target.value)} style={{ width: '100%', padding: '5px', backgroundColor: '#334155', color: '#fff', border: '1px solid #475569', borderRadius: '4px' }} />
+              </div>
+              <div>
+                <label>అక్షరాల పరిమాణం (Font Size): {bodyFontSize}px</label>
+                <input type="range" min="11" max="24" value={bodyFontSize} onChange={(e) => setBodyFontSize(Number(e.target.value))} style={{ width: '100%' }} />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* 5. ఫోటో మేనేజర్ (Shapes & Positions) */}
+        <div style={{ marginBottom: '8px', backgroundColor: '#0f172a', borderRadius: '6px', overflow: 'hidden' }}>
+          <button onClick={() => toggleSection('photoCtrl')} style={{ width: '100%', padding: '10px', textAlign: 'left', backgroundColor: '#1e293b', border: 'none', color: '#38bdf8', fontWeight: 'bold', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}>
+            <span>5. ఫోటోల కంట్రోలర్ ({photos.length})</span>
+            <span>{activeSection === 'photoCtrl' ? '▲' : '▼'}</span>
+          </button>
+          {activeSection === 'photoCtrl' && (
+            <div style={{ padding: '10px', fontSize: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <input type="file" multiple onChange={(e) => handleFileUpload(e, 'photo')} />
+              <p style={{ fontSize: '10px', color: '#94a3b8', margin: 0 }}>* ఇక్కడ నేరుగా వాట్సాప్ ఫోటోలు Ctrl+V పేస్ట్ చేయవచ్చు.</p>
+
+              {photos.length > 0 && photos[activePhotoIdx] && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '6px' }}>
+                  <label>ఫోటో ఆకారం (6 Shapes):</label>
+                  <select value={photos[activePhotoIdx].shape} onChange={(e) => updatePhotoSetting('shape', e.target.value)} style={{ padding: '4px', backgroundColor: '#334155', color: '#fff', border: 'none' }}>
+                    <option value="box">బాక్స్</option>
+                    <option value="circle">గుండ్రంగా (Circle)</option>
+                    <option value="v-oval">నిలువు ఓవల్</option>
+                    <option value="h-oval">అడ్డం ఓవల్</option>
+                    <option value="rounded">రౌండెడ్ కార్నర్</option>
+                    <option value="capsule">క్యాప్సూల్</option>
+                  </select>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* 6. ఆటో-ఫిట్ మ్యాజిక్ బటన్ */}
+        <div style={{ marginTop: '15px' }}>
+          <button 
+            onClick={handleAutoFit}
+            style={{ width: '100%', backgroundColor: '#10b981', color: '#fff', border: 'none', padding: '12px', borderRadius: '6px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)' }}
+          >
+            ⚡ ఆటో-ఫిట్ పేజీ (Auto-Fill Whitespace)
           </button>
         </div>
+
       </div>
 
-      {/* మెయిన్ వర్క్‌స్పేస్ (ఎడమ వైపు టూల్‌బార్ + కుడి వైపు ప్రివ్యూ) */}
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-        
-        {/* ఎడమవైపు టూల్‌బార్ */}
-        <div style={{ width: '360px', backgroundColor: '#1e293b', padding: '20px', overflowY: 'auto', borderRight: '1px solid #334155' }}>
-          
-          {/* 1. పేపర్ సైజు ఎంపిక */}
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px', color: '#93c5fd' }}>1. న్యూస్‌పేపర్ సైజ్ ఎంచుకోండి:</label>
-            <select value={pageSize} onChange={(e) => setPageSize(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', backgroundColor: '#0f172a', color: '#fff', border: '1px solid #475569' }}>
-              <option value="A3">A3 సైజ్ (Standard Digital)</option>
-              <option value="Broadsheet">Broadsheet (Main Edition)</option>
-              <option value="Tabloid">Tabloid (District Edition)</option>
-              <option value="SingleCard">Single News Card (Social Media)</option>
-            </select>
-          </div>
-
-          {/* 2. బోర్డర్ స్టైల్ ఎంపిక */}
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px', color: '#93c5fd' }}>2. పేపర్ బోర్డర్ డిజైన్:</label>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button 
-                onClick={() => setBorderStyle('single')}
-                style={{ flex: 1, padding: '8px', border: borderStyle === 'single' ? '2px solid #2563eb' : '1px solid #475569', backgroundColor: '#0f172a', color: '#fff', borderRadius: '4px', cursor: 'pointer' }}
-              >
-                సింగిల్ లైన్
-              </button>
-              <button 
-                onClick={() => setBorderStyle('double')}
-                style={{ flex: 1, padding: '8px', border: borderStyle === 'double' ? '2px solid #2563eb' : '1px solid #475569', backgroundColor: '#0f172a', color: '#fff', borderRadius: '4px', cursor: 'pointer' }}
-              >
-                డబుల్ లైన్
-              </button>
+      {/* కుడి వైపు: లైవ్ పత్రిక డిజైన్ కాన్వాస్ */}
+      <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'flex-start', overflowY: 'auto', padding: '10px' }}>
+        <div style={{
+          backgroundColor: pageBgColor,
+          color: '#000',
+          width: pageSize === 'Broadsheet' ? '850px' : '680px',
+          minHeight: '900px',
+          padding: '25px',
+          boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+          border: borderStyle === 'డబుల్ లైన్' ? `4px double ${borderColor}` : borderStyle === 'సింగిల్ లైన్' ? `2px solid ${borderColor}` : 'none',
+          display: 'flex',
+          flexDirection: 'column'
+        }}>
+          {/* 1. పత్రిక మాస్టర్ హెడర్ */}
+          <div style={{ borderBottom: '2px solid #000', paddingBottom: '10px', marginBottom: '15px', textAlign: logoAlign }}>
+            {logo && <img src={logo} alt="Logo" style={{ width: `${logoWidth}px`, height: `${logoHeight}px`, objectFit: 'contain' }} />}
+            <h1 style={{ margin: '5px 0 0 0', fontSize: '40px', fontWeight: '900', fontFamily: titleFont, color: titleColor, backgroundColor: titleBg }}>{paperTitle}</h1>
+            <div style={{ borderTop: '1px solid #000', borderBottom: '1px solid #000', padding: '4px 0', marginTop: '8px', fontSize: '11px', fontWeight: 'bold', display: 'flex', justifyContent: 'space-between' }}>
+              <span>{subHeaderInfo}</span>
             </div>
           </div>
 
-          {/* 3. లోగో సెట్టింగ్స్ & వాట్సాప్ డైరెక్ట్ పేస్ట్ */}
-          <div style={{ marginBottom: '20px', backgroundColor: '#0f172a', padding: '12px', borderRadius: '6px', border: '1px solid #334155' }}>
-            <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px', color: '#93c5fd' }}>
-              3. పత్రిక లోగో (Top Header):
-            </label>
-            
-            {/* ఫైల్ ద్వారా అప్‌లోడ్ */}
-            <div style={{ marginBottom: '10px' }}>
-              <span style={{ fontSize: '11px', color: '#cbd5e1', display: 'block', marginBottom: '4px' }}>ఆప్షన్ 1: ఫైల్ ఎంచుకోండి</span>
-              <input type="file" accept="image/*" onChange={handleLogoUpload} style={{ fontSize: '12px', width: '100%' }} />
-            </div>
-
-            {/* వాట్సాప్ డైరెక్ట్ పేస్ట్ (Ctrl + V) */}
-            <div style={{ marginBottom: '12px' }}>
-              <span style={{ fontSize: '11px', color: '#cbd5e1', display: 'block', marginBottom: '4px' }}>ఆప్షన్ 2: వాట్సాప్ నుండి డైరెక్ట్ పేస్ట్</span>
-              <div 
-                tabIndex={0}
-                onPaste={handlePasteImage}
-                style={{
-                  border: '2px dashed #3b82f6',
-                  backgroundColor: '#1e293b',
-                  padding: '10px',
-                  textAlign: 'center',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  color: '#60a5fa',
-                  outline: 'none'
-                }}
-              >
-                📋 వాట్సాప్ లోగో కాపీ చేసి<br />
-                <b style={{ color: '#fff', fontSize: '12px' }}>ఇక్కడ క్లిక్ చేసి Ctrl + V నొక్కండి</b>
-              </div>
-            </div>
-
-            {/* స్లైడర్లు (గరిష్టంగా 1000px వరకు పెంచే వెసులుబాటు) */}
-            <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginTop: '10px' }}>
-              <span style={{ fontSize: '12px', minWidth: '55px' }}>వెడల్పు:</span>
-              <input 
-                type="range" 
-                min="150" 
-                max="1000" 
-                value={logoWidth} 
-                onChange={(e) => setLogoWidth(Number(e.target.value))} 
-                style={{ flex: 1 }} 
-              />
-              <span style={{ fontSize: '11px', color: '#94a3b8' }}>{logoWidth}px</span>
-            </div>
-
-            <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginTop: '8px' }}>
-              <span style={{ fontSize: '12px', minWidth: '55px' }}>ఎత్తు:</span>
-              <input 
-                type="range" 
-                min="40" 
-                max="250" 
-                value={logoHeight} 
-                onChange={(e) => setLogoHeight(Number(e.target.value))} 
-                style={{ flex: 1 }} 
-              />
-              <span style={{ fontSize: '11px', color: '#94a3b8' }}>{logoHeight}px</span>
-            </div>
-          </div>
-
-          {/* 4. సంపుటి, సంచిక ఐడెంటిటీ బార్ */}
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px', color: '#93c5fd' }}>4. ఐడెంటిటీ లైన్ స్టైల్స్ (10 మోడల్స్):</label>
-            <select value={headerStyle} onChange={(e) => setHeaderStyle(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', backgroundColor: '#0f172a', color: '#fff', border: '1px solid #475569', marginBottom: '10px' }}>
-              <option value="style1">మోడల్ 1 - క్లాసిక్ డబుల్ బోర్డర్</option>
-              <option value="style2">మోడల్ 2 - సెంటర్‌డ్ టాప్ బార్</option>
-              <option value="style3">మోడల్ 3 - బోల్డ్ బ్యాక్‌గ్రౌండ్ బార్</option>
-              <option value="style4">మోడల్ 4 - మినిమల్ సింగిల్ లైన్</option>
-              <option value="style5">మోడల్ 5 - ఈనాడు స్టైల్ క్లాసిక్</option>
-              <option value="style6">మోడల్ 6 - ఆంధ్రజ్యోతి క్లాసిక్</option>
-              <option value="style7">మోడల్ 7 - మోడర్న్ బాక్స్ డిజైన్</option>
-              <option value="style8">మోడల్ 8 - సెపరేటెడ్ డివైడర్</option>
-              <option value="style9">మోడల్ 9 - ఎడిషన్ హైలైటర్</option>
-              <option value="style10">మోడల్ 10 - ప్రెస్ డిజిటల్ లేఅవుట్</option>
-            </select>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '12px' }}>
-              <div>
-                <label>సంపుటి:</label>
-                <input type="text" value={editionNo} onChange={(e) => setEditionNo(e.target.value)} style={{ width: '100%', padding: '4px', borderRadius: '4px', color: '#000' }} />
-              </div>
-              <div>
-                <label>సంచిక:</label>
-                <input type="text" value={issueNo} onChange={(e) => setIssueNo(e.target.value)} style={{ width: '100%', padding: '4px', borderRadius: '4px', color: '#000' }} />
-              </div>
-              <div>
-                <label>స్థలం:</label>
-                <input type="text" value={place} onChange={(e) => setPlace(e.target.value)} style={{ width: '100%', padding: '4px', borderRadius: '4px', color: '#000' }} />
-              </div>
-              <div>
-                <label>వెల (రూ.):</label>
-                <input type="text" value={price} onChange={(e) => setPrice(e.target.value)} style={{ width: '100%', padding: '4px', borderRadius: '4px', color: '#000' }} />
-              </div>
-            </div>
-          </div>
-
-          {/* 5. పేజీల సంఖ్య మేనేజర్ */}
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px', color: '#93c5fd' }}>5. మొత్తం పేజీల సంఖ్య (1 to 16):</label>
-            <input 
-              type="number" 
-              min="1" 
-              max="16" 
-              value={totalPages} 
-              onChange={(e) => setTotalPages(Math.min(16, Math.max(1, Number(e.target.value))))}
-              style={{ width: '100%', padding: '8px', borderRadius: '4px', backgroundColor: '#0f172a', color: '#fff', border: '1px solid #475569' }}
-            />
-          </div>
-
-          {/* 6. బాటమ్ ప్రెస్ మార్కులు */}
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-              <input type="checkbox" checked={showBottomMarks} onChange={(e) => setShowBottomMarks(e.target.checked)} />
-              <span style={{ fontSize: '13px', color: '#93c5fd' }}>అడుగున ప్రెస్ మార్కింగ్ గుర్తులు (Footer Marks) ఉంచు</span>
-            </label>
-          </div>
-
-        </div>
-
-        {/* కుడివైపు: పేజీ లైవ్ ప్రివ్యూ */}
-        <div style={{ flex: 1, backgroundColor: '#334155', padding: '30px', overflowY: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          
-          {/* పేజీ నావిగేషన్ టాబ్‌లు */}
-          <div style={{ display: 'flex', gap: '5px', marginBottom: '15px', flexWrap: 'wrap', justifyContent: 'center' }}>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((pNum) => (
-              <button
-                key={pNum}
-                onClick={() => setCurrentPage(pNum)}
-                style={{
-                  padding: '6px 14px',
-                  backgroundColor: currentPage === pNum ? '#2563eb' : '#1e293b',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontWeight: currentPage === pNum ? 'bold' : 'normal'
-                }}
-              >
-                పేజీ {pNum}
-              </button>
-            ))}
-          </div>
-
-          {/* న్యూస్‌పేపర్ షీట్ */}
+          {/* 2. పత్రిక వార్తా కార్డ్ / మోడల్ (Reactor View) */}
           <div style={{
-            width: pageSize === 'Broadsheet' ? '680px' : pageSize === 'Tabloid' ? '460px' : pageSize === 'SingleCard' ? '400px' : '540px',
-            backgroundColor: '#fff',
-            color: '#000',
-            minHeight: pageSize === 'SingleCard' ? '500px' : '760px',
-            padding: '20px',
-            boxSizing: 'border-box',
-            boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
-            position: 'relative'
+            backgroundColor: newsModel === 'highlight' ? '#fef3c7' : 'transparent',
+            border: newsModel === 'card' ? '2px solid #0b1b6e' : 'none',
+            padding: newsModel === 'card' || newsModel === 'highlight' ? '15px' : '0px',
+            borderRadius: newsModel === 'card' ? '6px' : '0px',
+            marginBottom: '15px'
           }}>
-            
-            {/* బోర్డర్ బాక్స్ */}
-            <div style={{
-              border: borderStyle === 'double' ? '4px double #000' : '1px solid #000',
-              padding: '12px',
-              minHeight: pageSize === 'SingleCard' ? '450px' : '700px',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between'
-            }}>
-              
-              <div>
-                {/* మొదటి పేజీలో మాత్రమే మెయిన్ లోగో వస్తుంది */}
-                {currentPage === 1 ? (
-                  <>
-                    <div style={{ textAlign: 'center', marginBottom: '8px', display: 'flex', justifyContent: 'center', overflow: 'hidden' }}>
-                      {logoUrl ? (
-                        <img 
-                          src={logoUrl} 
-                          alt="Newspaper Logo" 
-                          style={{ 
-                            width: `${logoWidth}px`, 
-                            maxWidth: '100%', 
-                            height: `${logoHeight}px`, 
-                            objectFit: 'fill' 
-                          }} 
-                        />
-                      ) : (
-                        <h1 style={{ margin: 0, fontSize: '36px', fontFamily: 'serif', color: '#1e293b' }}>యువగళం</h1>
-                      )}
-                    </div>
+            {/* శీర్షిక */}
+            <h2 style={{ fontSize: `${headSize}px`, fontFamily: headFont, color: headColor, backgroundColor: headBg, margin: '0 0 10px 0', lineHeight: '1.3' }}>
+              {mainHeadline}
+            </h2>
 
-                    {/* సంపుటి, సంచిక ఐడెంటిటీ బార్ డిజైన్ */}
-                    <div style={{
-                      borderTop: headerStyle === 'style3' ? 'none' : '1px solid #000',
-                      borderBottom: headerStyle === 'style3' ? 'none' : '1px solid #000',
-                      backgroundColor: headerStyle === 'style3' ? '#000' : headerStyle === 'style9' ? '#f1f5f9' : 'transparent',
-                      color: headerStyle === 'style3' ? '#fff' : '#000',
-                      padding: '4px 8px',
-                      fontSize: '11px',
-                      display: 'flex',
-                      justify: 'space-between',
-                      fontWeight: 'bold',
-                      fontFamily: 'serif'
-                    }}>
-                      <span>సంపుటి {editionNo} | సంచిక {issueNo}</span>
-                      <span>{place} | {date}</span>
-                      <span>వెల: రూ. {price}</span>
-                    </div>
-                  </>
-                ) : (
-                  /* 2వ పేజీ నుండి 16వ పేజీ వరకు క్లాసిక్ టాప్ లైన్ */
-                  <div style={{ borderBottom: '2px solid #000', paddingBottom: '4px', marginBottom: '10px', display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: 'bold' }}>
-                    <span>యువగళం దిపాంతర ఎడిషన్</span>
-                    <span>పేజీ నంబర్: {currentPage}</span>
-                    <span>{date}</span>
-                  </div>
-                )}
-
-                {/* డమ్మీ గ్రిడ్ ప్రాంతం */}
-                <div style={{ marginTop: '20px', border: '1px dashed #cbd5e1', padding: '40px 10px', textAlign: 'center', color: '#64748b' }}>
-                  <h3>పేజీ {currentPage} మాస్టర్ లేఅవుట్ సిద్ధంగా ఉంది!</h3>
-                  <p style={{ fontSize: '12px' }}>ఈ మాస్టర్ సేవ్ అయ్యాక, రోజువారీ వార్తలు ఫిల్ చేసే మోడ్‌లో ఈ పేజీలోని బాక్సుల్లో వార్తలు టైప్ చేయవచ్చు.</p>
-                </div>
+            {/* సబ్-హెడ్‌లైన్ */}
+            {subHeadline && (
+              <div style={{ backgroundColor: subBg, color: subColor, padding: '6px 10px', fontSize: '14px', fontWeight: 'bold', borderLeft: '4px solid #0b1b6e', marginBottom: '12px' }}>
+                <span>{subBullet} {subHeadline}</span>
               </div>
+            )}
 
-              {/* అడుగున ప్రెస్ మార్కింగ్ గుర్తులు */}
-              {showBottomMarks && (
-                <div style={{ borderTop: '1px solid #000', paddingTop: '6px', marginTop: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '9px', color: '#475569' }}>
-                  <span>SATHWIKA PUBLISHER MASTER LAYOUT ENGINE</span>
-                  <div style={{ display: 'flex', gap: '3px' }}>
-                    <span style={{ display: 'inline-block', width: '8px', height: '8px', backgroundColor: '#00ffff' }}></span>
-                    <span style={{ display: 'inline-block', width: '8px', height: '8px', backgroundColor: '#ff00ff' }}></span>
-                    <span style={{ display: 'inline-block', width: '8px', height: '8px', backgroundColor: '#ffff00' }}></span>
-                    <span style={{ display: 'inline-block', width: '8px', height: '8px', backgroundColor: '#000000' }}></span>
-                  </div>
-                  <span>PAGE {currentPage} OF {totalPages}</span>
+            {/* గ్రిడ్ కాలమ్స్‌తో వార్తా టెక్స్ట్ & ఫోటోలు */}
+            <div style={{
+              columnCount: columnCount,
+              columnGap: '16px',
+              columnRule: '1px solid #e2e8f0',
+              fontSize: `${bodyFontSize}px`,
+              lineHeight: lineSpacing,
+              color: bodyTextColor,
+              textAlign: 'justify'
+            }}>
+              {photos.length > 0 && photos[0] && (
+                <div style={{ float: photos[0].align, margin: '0 10px 10px 0', width: `${photos[0].size}px` }}>
+                  <img 
+                    src={photos[0].url} 
+                    alt="News" 
+                    style={{ width: '100%', height: 'auto', ...getPhotoShapeStyle(photos[0].shape) }} 
+                  />
+                  {photos[0].showCaption && <div style={{ fontSize: '10px', fontWeight: 'bold', textAlign: 'center', marginTop: '2px' }}>{photos[0].caption}</div>}
                 </div>
               )}
 
+              <p style={{ margin: 0, marginBottom: `${paragraphGap}px` }}>
+                <strong style={{ color: '#dc2626' }}>{dateLine} </strong>
+                {bodyText}
+              </p>
             </div>
           </div>
 
         </div>
-
       </div>
+
     </div>
   );
 }
