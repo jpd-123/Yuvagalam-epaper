@@ -17,7 +17,7 @@ export default function Dashboard({ onSelectLayout, onCreateNewLayout, onOpenCli
       </div>
 
       {/* ప్రధాన ఆప్షన్ల బటన్లు */}
-      <div style={{ display: 'flex', gap: '15px', marginBottom: '30px' }}>
+      <div style={{ display: 'flex', gap: '15px', marginBottom: '30px', flexWrap: 'wrap' }}>
         <button 
           onClick={onCreateNewLayout}
           style={{ backgroundColor: '#2563eb', color: '#fff', border: 'none', padding: '12px 20px', borderRadius: '6px', fontWeight: 'bold', fontSize: '15px', cursor: 'pointer' }}
