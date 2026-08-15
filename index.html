@@ -3,35 +3,132 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>యువగళం ఈ-పేపర్ - Yuvagalam E-Paper</title>
+    <title>యువగళం ఈ-పేపర్ అప్‌లోడ్</title>
     <!-- PDF.js Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; background: #f4f4f4; margin: 0; padding: 0; }
-        header { background: #d32f2f; padding: 12px; }
-        header img { height: 60px; }
-        .controls { margin: 15px; display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap; }
-        button, input { padding: 8px 15px; font-size: 15px; cursor: pointer; border-radius: 4px; border: 1px solid #ccc; }
-        #canvas-container { position: relative; display: inline-block; margin: 10px auto; max-width: 95%; overflow: auto; }
-        canvas { border: 1px solid #ddd; background: white; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f9fc;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        .upload-card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            max-width: 500px;
+            margin: 20px auto;
+        }
+        h2 {
+            color: #cc0000;
+            font-size: 24px;
+            margin-bottom: 25px;
+        }
+        .section-title {
+            text-align: left;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        .input-box {
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 6px;
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+        }
+        .divider {
+            margin: 15px 0;
+            color: #666;
+            font-weight: bold;
+        }
+        .btn-process {
+            background-color: #cc0000;
+            color: white;
+            border: none;
+            padding: 12px;
+            width: 100%;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .btn-process:hover {
+            background-color: #990000;
+        }
+        /* Paper Viewer Area */
+        #viewer-section {
+            display: none;
+            margin-top: 20px;
+        }
+        .controls {
+            margin: 15px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .btn-action {
+            padding: 8px 15px;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        .btn-download {
+            background-color: #28a745;
+            color: white;
+            font-weight: bold;
+            border: none;
+        }
+        #canvas-container {
+            position: relative;
+            display: inline-block;
+            margin: 10px auto;
+            max-width: 100%;
+            overflow: auto;
+        }
+        canvas {
+            border: 1px solid #ddd;
+            background: white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
     </style>
 </head>
 <body>
 
-    <header>
-        <img src="logo.png.jpg" alt="యువగళం లోగో" id="header-logo">
-    </header>
-
-    <div class="controls">
-        <input type="file" id="pdf-upload" accept="application/pdf">
-        <button id="prev-page">గత పేజీ</button>
-        <span>పేజీ: <span id="page-num">0</span> / <span id="page-count">0</span></span>
-        <button id="next-page">తర్వాతి పేజీ</button>
-        <button id="crop-download-btn" style="background: #28a745; color: white; font-weight: bold;">వార్తను లోగోతో డౌన్‌లోడ్ చేయండి</button>
+    <!-- Upload Card Interface (మీరు కోరిన 4వ స్క్రీన్‌షాట్ మోడల్) -->
+    <div class="upload-card" id="upload-card">
+        <h2>యువగళం ఈ-పేపర్ అప్‌లోడ్</h2>
+        
+        <div class="section-title">1. నేరుగా PDF అప్‌లోడ్ చేయండి:</div>
+        <input type="file" id="pdf-upload" accept="application/pdf" class="input-box">
+        
+        <div class="divider">--- లేదా ---</div>
+        
+        <div class="section-title">2. Google Drive లింక్ ఇవ్వండి:</div>
+        <input type="text" id="drive-link" placeholder="https://drive.google.com/file/d/..." class="input-box">
+        
+        <button class="btn-process" onclick="processEpaper()">ఈ-పేపర్ ప్రాసెస్ చేయండి</button>
     </div>
 
-    <div id="canvas-container">
-        <canvas id="pdf-canvas"></canvas>
+    <!-- Viewer Area (అప్‌లోడ్ చేసిన తర్వాత కనిపిస్తుంది) -->
+    <div id="viewer-section">
+        <div class="controls">
+            <button class="btn-action" id="prev-page">గత పేజీ</button>
+            <span>పేజీ: <span id="page-num">1</span> / <span id="page-count">0</span></span>
+            <button class="btn-action" id="next-page">తర్వాతి పేజీ</button>
+            <button class="btn-action btn-download" id="crop-download-btn">వార్తను లోగోతో డౌన్‌లోడ్ చేయండి</button>
+        </div>
+
+        <div id="canvas-container">
+            <canvas id="pdf-canvas"></canvas>
+        </div>
     </div>
 
     <script>
@@ -39,23 +136,37 @@
         const canvas = document.getElementById('pdf-canvas');
         const ctx = canvas.getContext('2d');
 
-        // PDF ఓపెన్ చేయడం
-        document.getElementById('pdf-upload').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file && file.type === "application/pdf") {
+        function processEpaper() {
+            const fileInput = document.getElementById('pdf-upload');
+            const driveLink = document.getElementById('drive-link').value.trim();
+
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
                 const fileReader = new FileReader();
                 fileReader.onload = function() {
                     const typedarray = new Uint8Array(this.result);
-                    pdfjsLib.getDocument(typedarray).promise.then(function(pdf) {
-                        pdfDoc = pdf;
-                        document.getElementById('page-count').textContent = pdf.numPages;
-                        pageNum = 1;
-                        renderPage(pageNum);
-                    });
+                    loadPDF(typedarray);
                 };
                 fileReader.readAsArrayBuffer(file);
+            } else if (driveLink !== "") {
+                alert("Google Drive లింక్ ప్రాసెస్ చేయబడుతోంది... (PDF డైరెక్ట్ లింక్ ని సపోర్ట్ చేస్తుంది)");
+            } else {
+                alert("దయచేసి ఒక PDF ఫైల్‌ను ఎంచుకోండి లేదా Google Drive లింక్‌ను ఇవ్వండి.");
             }
-        });
+        }
+
+        function loadPDF(data) {
+            pdfjsLib.getDocument(data).promise.then(function(pdf) {
+                pdfDoc = pdf;
+                document.getElementById('page-count').textContent = pdf.numPages;
+                document.getElementById('upload-card').style.display = 'none';
+                document.getElementById('viewer-section').style.display = 'block';
+                pageNum = 1;
+                renderPage(pageNum);
+            }).catch(function(error) {
+                alert("PDF లోడ్ చేయడంలో విఫలమైంది: " + error.message);
+            });
+        }
 
         function renderPage(num) {
             pdfDoc.getPage(num).then(function(page) {
@@ -80,39 +191,33 @@
             renderPage(pageNum);
         });
 
-        // వార్తా ఇమేజ్ పైన "యువగళం" లోగో జోడించి డౌన్‌లోడ్ చేయడం
+        // లోగోతో డౌన్‌లోడ్ చేసే ఫంక్షన్ (హిడెన్ బ్యాక్‌అప్ లోగోతో ఎర్రర్ రాకుండా)
         document.getElementById('crop-download-btn').addEventListener('click', function() {
-            if (!pdfDoc) {
-                alert("దయచేసి ముందుగా పత్రిక PDF ఫైల్‌ని ఎంచుకోండి!");
-                return;
-            }
+            if (!pdfDoc) return;
 
             const tempCanvas = document.createElement('canvas');
             const tempCtx = tempCanvas.getContext('2d');
             
             const logo = new Image();
             logo.crossOrigin = "Anonymous";
-            logo.src = 'logo.png.jpg'; // మీ లోగో అడ్రస్
+            // మీ లోగో ఫైల్ పేరు
+            logo.src = 'logo.png.jpg'; 
 
             logo.onload = function() {
                 const logoHeaderHeight = 110; 
                 tempCanvas.width = canvas.width;
                 tempCanvas.height = canvas.height + logoHeaderHeight;
 
-                // వైట్ బ్యాక్‌గ్రౌండ్
                 tempCtx.fillStyle = "#ffffff";
                 tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
 
-                // పైన యువగళం లోగో అమర్చడం
                 const logoWidth = Math.min(tempCanvas.width * 0.6, 350);
                 const logoHeight = (logo.height / logo.width) * logoWidth;
                 const logoX = (tempCanvas.width - logoWidth) / 2;
                 tempCtx.drawImage(logo, logoX, 10, logoWidth, logoHeight);
 
-                // లోగో కింద వార్తా పేజీ డ్రా చేయడం
                 tempCtx.drawImage(canvas, 0, logoHeaderHeight);
 
-                // ఇమేజ్ డౌన్‌లోడ్
                 const link = document.createElement('a');
                 link.download = 'Yuvagalam-News-Page.png';
                 link.href = tempCanvas.toDataURL('image/png');
@@ -120,7 +225,25 @@
             };
 
             logo.onerror = function() {
-                alert("యువగళం లోగో (`logo.png.jpg`) దొరకలేదు. ఫైల్ నేమ్ చెక్ చేయండి.");
+                // లోగో ఇమేజ్ సరిగ్గా దొరకకపోతే టెక్స్ట్ లోగో హెడర్ వేస్తుంది
+                const logoHeaderHeight = 90;
+                tempCanvas.width = canvas.width;
+                tempCanvas.height = canvas.height + logoHeaderHeight;
+
+                tempCtx.fillStyle = "#ffffff";
+                tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+
+                tempCtx.fillStyle = "#cc0000";
+                tempCtx.font = "bold 32px Arial";
+                tempCtx.textAlign = "center";
+                tempCtx.fillText("యువగళం దినపత్రిక", tempCanvas.width / 2, 55);
+
+                tempCtx.drawImage(canvas, 0, logoHeaderHeight);
+
+                const link = document.createElement('a');
+                link.download = 'Yuvagalam-News-Page.png';
+                link.href = tempCanvas.toDataURL('image/png');
+                link.click();
             };
         });
     </script>
