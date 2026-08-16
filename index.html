@@ -203,9 +203,16 @@
         }
 
         function renderPDFFromUrl(url) {
-            pdfjsLib.getDocument(url).promise.then(loadPDFData).catch(err => {
-                alert("ఈ-పేపర్ లోడ్ అవ్వలేదు. లింక్ గడువు ముగిసి ఉండవచ్చు.");
-            });
+    const loadingTask = pdfjsLib.getDocument({
+        url: url,
+        cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/cmaps/',
+        cMapPacked: true,
+    });
+    
+    loadingTask.promise.then(loadPDFData).catch(err => {
+        console.error("PDF Load Error:", err);
+        alert("PDF లోడ్ చేయడంలో సమస్య వచ్చింది. దయచేసి పేజీని రిఫ్రెష్ చేసి మళ్ళీ ప్రయత్నించండి.");
+    });
         }
 
         function loadPDFData(pdf) {
