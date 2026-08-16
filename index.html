@@ -52,7 +52,7 @@
             padding: 10px;
             position: sticky;
             top: 0;
-            z-index: 100;
+            z-index: 1000;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             display: flex;
             justify-content: center;
@@ -84,6 +84,10 @@
             background: white;
             max-width: 100%;
             overflow: hidden;
+            border: 2px solid transparent;
+        }
+        .page-wrapper.active-page {
+            border-color: #007bff;
         }
         canvas { display: block; max-width: 100%; height: auto; }
         
@@ -98,16 +102,17 @@
             touch-action: none;
         }
         .crop-handle {
-            width: 12px;
-            height: 12px;
+            width: 14px;
+            height: 14px;
             background: #007bff;
             position: absolute;
-            border: 1px solid white;
+            border: 2px solid white;
+            border-radius: 50%;
         }
-        .handle-nw { top: -6px; left: -6px; cursor: nwse-resize; }
-        .handle-ne { top: -6px; right: -6px; cursor: nesw-resize; }
-        .handle-sw { bottom: -6px; left: -6px; cursor: nesw-resize; }
-        .handle-se { bottom: -6px; right: -6px; cursor: nwse-resize; }
+        .handle-nw { top: -7px; left: -7px; cursor: nwse-resize; }
+        .handle-ne { top: -7px; right: -7px; cursor: nesw-resize; }
+        .handle-sw { bottom: -7px; left: -7px; cursor: nesw-resize; }
+        .handle-se { bottom: -7px; right: -7px; cursor: nwse-resize; }
     </style>
 </head>
 <body>
@@ -140,11 +145,6 @@
         let activeWrapper = null;
         let activeCanvas = null;
         let activeCropBox = null;
-
-        // Base64 Encoded Header Logo for High Reliability
-        const logoSVG = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="70" viewBox="0 0 400 70"><rect width="100%" height="100%" fill="%23cc0000"/><text x="50%" y="45" font-family="Arial, sans-serif" font-weight="bold" font-size="34" fill="%23ffffff" text-anchor="middle">యువగళం దినపత్రిక</text></svg>`;
-        const headerLogoImg = new Image();
-        headerLogoImg.src = logoSVG;
 
         function processEpaper() {
             const fileInput = document.getElementById('pdf-upload');
@@ -194,6 +194,7 @@
 
                 const wrapper = document.createElement('div');
                 wrapper.className = 'page-wrapper';
+                wrapper.dataset.pageNum = num;
 
                 const canvas = document.createElement('canvas');
                 canvas.height = viewport.height;
@@ -202,7 +203,7 @@
                 const ctx = canvas.getContext('2d');
                 await page.render({ canvasContext: ctx, viewport: viewport }).promise;
 
-                // Create Crop Box Overlay with handles
+                // Create Crop Box Overlay
                 const cropBox = document.createElement('div');
                 cropBox.className = 'crop-box';
                 cropBox.innerHTML = `
@@ -216,30 +217,49 @@
                 wrapper.appendChild(cropBox);
                 container.appendChild(wrapper);
 
+                // Set initial active page to 1st page
+                if (num === 1) {
+                    setActivePage(wrapper, canvas, cropBox);
+                }
+
+                // Click event to change active page to whichever page user interacts with
+                wrapper.addEventListener('pointerdown', () => {
+                    setActivePage(wrapper, canvas, cropBox);
+                });
+
                 setupInteractiveCrop(wrapper, canvas, cropBox);
             }
         }
 
-        // 1-Click Crop Box Generation
+        function setActivePage(wrapper, canvas, cropBox) {
+            document.querySelectorAll('.page-wrapper').forEach(w => w.classList.remove('active-page'));
+            wrapper.classList.add('active-page');
+            activeWrapper = wrapper;
+            activeCanvas = canvas;
+            activeCropBox = cropBox;
+        }
+
+        // Toggle Crop Box for Current Active Page
         function toggleCropMode() {
             isCropMode = !isCropMode;
             const btn = document.getElementById('crop-toggle-btn');
             
             if (!activeWrapper) {
-                activeWrapper = document.querySelector('.page-wrapper');
-                if (activeWrapper) {
-                    activeCanvas = activeWrapper.querySelector('canvas');
-                    activeCropBox = activeWrapper.querySelector('.crop-box');
+                const firstWrap = document.querySelector('.page-wrapper');
+                if (firstWrap) {
+                    setActivePage(firstWrap, firstWrap.querySelector('canvas'), firstWrap.querySelector('.crop-box'));
                 }
             }
 
             if (isCropMode) {
                 btn.style.backgroundColor = "#ff9900";
-                btn.innerText = "✖️ క్రాపింగ్ పూర్తి చేయి";
+                btn.innerText = "✖️ క్రాపింగ్ దాచు";
+
+                // Hide crop boxes on all pages first
+                document.querySelectorAll('.crop-box').forEach(box => box.style.display = 'none');
 
                 if (activeCropBox && activeCanvas) {
-                    // Instantly show crop box in center of page
-                    const w = activeCanvas.clientWidth * 0.7;
+                    const w = activeCanvas.clientWidth * 0.8;
                     const h = activeCanvas.clientHeight * 0.4;
                     const l = (activeCanvas.clientWidth - w) / 2;
                     const t = (activeCanvas.clientHeight - h) / 3;
@@ -253,11 +273,11 @@
             } else {
                 btn.style.backgroundColor = "#007bff";
                 btn.innerText = "✂️ వార్త క్రాప్ చేయండి";
-                if (activeCropBox) activeCropBox.style.display = 'none';
+                document.querySelectorAll('.crop-box').forEach(box => box.style.display = 'none');
             }
         }
 
-        // Drag & Resize Interactivity for Crop Box
+        // Drag & Resize Interactivity
         function setupInteractiveCrop(wrapper, canvas, cropBox) {
             let isDragging = false;
             let isResizing = false;
@@ -265,9 +285,8 @@
             let startX, startY, startLeft, startTop, startWidth, startHeight;
 
             cropBox.addEventListener('pointerdown', (e) => {
-                activeWrapper = wrapper;
-                activeCanvas = canvas;
-                activeCropBox = cropBox;
+                e.stopPropagation();
+                setActivePage(wrapper, canvas, cropBox);
 
                 if (e.target.classList.contains('crop-handle')) {
                     isResizing = true;
@@ -331,12 +350,8 @@
             });
         }
 
-        // Export with Header Logo
+        // Export cropped news with src/logo.png.jpg Header
         function exportSelectedNews(actionType) {
-            if (!activeCanvas) {
-                activeCanvas = document.querySelector('canvas');
-                activeCropBox = document.querySelector('.crop-box');
-            }
             if (!activeCanvas) {
                 alert("దయచేసి ఈ-పేపర్ లోడ్ చేయండి.");
                 return;
@@ -352,34 +367,70 @@
                 cropH = parseFloat(activeCropBox.style.height) * scaleRatio;
             }
 
-            const headerHeight = 100;
+            const headerHeight = 120;
             const outputCanvas = document.createElement('canvas');
             const outCtx = outputCanvas.getContext('2d');
 
             outputCanvas.width = cropW;
             outputCanvas.height = cropH + headerHeight;
 
-            // 1. Draw Background
-            outCtx.fillStyle = '#ffffff';
-            outCtx.fillRect(0, 0, outputCanvas.width, outputCanvas.height);
+            // Load logo image from src/logo.png.jpg
+            const logo = new Image();
+            logo.src = 'src/logo.png.jpg';
 
-            // 2. Draw Logo Header
-            const lWidth = Math.min(outputCanvas.width * 0.8, 380);
-            const lHeight = (headerLogoImg.height / headerLogoImg.width) * lWidth;
-            outCtx.drawImage(headerLogoImg, (outputCanvas.width - lWidth) / 2, 15, lWidth, lHeight);
+            logo.onload = function() {
+                generateOutput(logo);
+            };
 
-            // 3. Draw Cropped News
-            outCtx.drawImage(activeCanvas, cropX, cropY, cropW, cropH, 0, headerHeight, cropW, cropH);
+            logo.onerror = function() {
+                // Fallback to root logo.png.jpg if src path fails
+                const logoFallback = new Image();
+                logoFallback.src = 'logo.png.jpg';
+                logoFallback.onload = function() {
+                    generateOutput(logoFallback);
+                };
+                logoFallback.onerror = function() {
+                    generateOutput(null);
+                };
+            };
 
-            // 4. Download / Share Action
-            if (actionType === 'download') {
-                const link = document.createElement('a');
-                link.download = 'Yuvagalam-News.png';
-                link.href = outputCanvas.toDataURL('image/png');
-                link.click();
-            } else if (actionType === 'whatsapp') {
-                const text = encodeURIComponent("యువగళం ఈ-పేపర్ వార్త చూడండి: " + window.location.href);
-                window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+            function generateOutput(logoImg) {
+                // 1. Draw Background
+                outCtx.fillStyle = '#ffffff';
+                outCtx.fillRect(0, 0, outputCanvas.width, outputCanvas.height);
+
+                // 2. Draw Header Logo
+                if (logoImg) {
+                    const maxLogoWidth = Math.min(outputCanvas.width * 0.85, 400);
+                    const logoAspectRatio = logoImg.height / logoImg.width;
+                    const lWidth = maxLogoWidth;
+                    const lHeight = lWidth * logoAspectRatio;
+                    
+                    const posX = (outputCanvas.width - lWidth) / 2;
+                    const posY = (headerHeight - lHeight) / 2;
+
+                    outCtx.drawImage(logoImg, posX, posY, lWidth, lHeight);
+                } else {
+                    // Default Header Text if image fails
+                    outCtx.fillStyle = "#cc0000";
+                    outCtx.font = "bold 32px Arial";
+                    outCtx.textAlign = "center";
+                    outCtx.fillText("యువగళం దినపత్రిక", outputCanvas.width / 2, 65);
+                }
+
+                // 3. Draw Cropped News Content
+                outCtx.drawImage(activeCanvas, cropX, cropY, cropW, cropH, 0, headerHeight, cropW, cropH);
+
+                // 4. Download / Share
+                if (actionType === 'download') {
+                    const link = document.createElement('a');
+                    link.download = `Yuvagalam-News-Page${activeWrapper ? activeWrapper.dataset.pageNum : 1}.png`;
+                    link.href = outputCanvas.toDataURL('image/png');
+                    link.click();
+                } else if (actionType === 'whatsapp') {
+                    const text = encodeURIComponent("యువగళం ఈ-పేపర్ వార్త చూడండి: " + window.location.href);
+                    window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+                }
             }
         }
     </script>
