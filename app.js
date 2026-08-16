@@ -33,7 +33,7 @@ app.use('/uploads', express.static(UPLOAD_DIR));
 // API 1: PDF Upload Endpoint
 app.post('/api/upload', upload.single('pdf'), (req, res) => {
     if (!req.file) {
-        return res.status(400).json({ success: false, message: 'ఫైల్ అప్‌లోడ్ కాలేదు' });
+        return res.status(400).json({ success: false, message: 'pdf అప్‌లోడ్ కాలేదు' });
     }
     const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
     res.json({ success: true, url: fileUrl, filename: req.file.filename });
@@ -52,12 +52,12 @@ cron.schedule('0 0 * * *', () => {
             const filePath = path.join(UPLOAD_DIR, file);
             fs.stat(filePath, (err, stats) => {
                 if (err) return;
-                
+
                 // File age check
                 if (now - stats.mtimeMs > fiveDaysInMillis) {
                     fs.unlink(filePath, err => {
                         if (err) console.error(`Error deleting file ${file}:`, err);
-                        else console.log(`ఆటో డిలీట్ అయ్యింది: ${file}`);
+                        else console.log(`పాత ఫైల్ డిలీట్ అయ్యింది: ${file}`);
                     });
                 }
             });
@@ -65,6 +65,9 @@ cron.schedule('0 0 * * *', () => {
     });
 });
 
-app.listen(PORT, () => {
+// Start Server with Increased Timeout (5 Minutes)
+const server = app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
+
+server.timeout = 300000; // 5 నిమిషాల సమయం (Timeout)
