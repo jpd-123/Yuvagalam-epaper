@@ -3,48 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>యువగళం ఈ-పేపర్ అప్‌లోడ్</title>
+    <title>యువగళం ఈ-పేపర్</title>
     <!-- PDF.js Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <style>
+        * { box-sizing: border-box; }
         body {
             font-family: Arial, sans-serif;
-            background-color: #f7f9fc;
+            background-color: #f4f7f6;
             margin: 0;
-            padding: 20px;
+            padding: 10px;
             text-align: center;
         }
         .upload-card {
             background: white;
-            padding: 30px;
+            padding: 25px;
             border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-            max-width: 500px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            max-width: 480px;
             margin: 20px auto;
         }
-        h2 {
-            color: #cc0000;
-            font-size: 24px;
-            margin-bottom: 25px;
-        }
-        .section-title {
-            text-align: left;
-            font-weight: bold;
-            margin-bottom: 8px;
-            color: #333;
-        }
+        h2 { color: #cc0000; margin-bottom: 20px; }
+        .section-title { text-align: left; font-weight: bold; margin: 10px 0 5px 0; color: #333; }
         .input-box {
             border: 1px solid #ccc;
             padding: 10px;
             border-radius: 6px;
             width: 100%;
-            box-sizing: border-box;
-            margin-bottom: 15px;
-        }
-        .divider {
-            margin: 15px 0;
-            color: #666;
-            font-weight: bold;
+            margin-bottom: 12px;
         }
         .btn-process {
             background-color: #cc0000;
@@ -57,84 +43,91 @@
             font-weight: bold;
             cursor: pointer;
         }
-        .btn-process:hover {
-            background-color: #990000;
-        }
-        /* Paper Viewer Section */
-        #viewer-section {
-            display: none;
-            margin-top: 20px;
-        }
-        .controls {
-            margin: 15px 0;
+        .btn-process:hover { background-color: #990000; }
+        
+        #viewer-section { display: none; margin-top: 15px; }
+        .header-bar {
+            background: #ffffff;
+            padding: 10px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             display: flex;
             justify-content: center;
-            align-items: center;
             gap: 10px;
             flex-wrap: wrap;
         }
         .btn-action {
-            padding: 8px 15px;
+            padding: 9px 15px;
             font-size: 14px;
+            font-weight: bold;
             cursor: pointer;
             border-radius: 5px;
-            border: 1px solid #ccc;
-        }
-        .btn-download {
-            background-color: #28a745;
-            color: white;
-            font-weight: bold;
             border: none;
         }
-        #canvas-container {
-            position: relative;
-            display: inline-block;
-            margin: 10px auto;
-            max-width: 100%;
-            overflow: auto;
+        .btn-crop { background-color: #007bff; color: white; }
+        .btn-download { background-color: #28a745; color: white; }
+        .btn-whatsapp { background-color: #25D366; color: white; }
+        
+        /* Pages Container - Scrollable Vertical List */
+        #pages-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            margin-top: 15px;
         }
-        canvas {
-            border: 1px solid #ddd;
+        .page-wrapper {
+            position: relative;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
             background: white;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            max-width: 100%;
+        }
+        canvas { display: block; max-width: 100%; height: auto; }
+        
+        /* Crop Overlay Selection Box */
+        .crop-box {
+            position: absolute;
+            border: 2px dashed #007bff;
+            background-color: rgba(0, 123, 255, 0.2);
+            pointer-events: none;
+            display: none;
         }
     </style>
 </head>
 <body>
 
-    <!-- Upload Card Interface -->
+    <!-- 1. Upload Section -->
     <div class="upload-card" id="upload-card">
         <h2>యువగళం ఈ-పేపర్ అప్‌లోడ్</h2>
-        
-        <div class="section-title">1. నేరుగా PDF అప్‌లోడ్ చేయండి:</div>
+        <div class="section-title">1. PDF అప్‌లోడ్ చేయండి:</div>
         <input type="file" id="pdf-upload" accept="application/pdf" class="input-box">
-        
-        <div class="divider">--- లేదా ---</div>
-        
+        <div style="margin: 10px 0; color: #777;">--- లేదా ---</div>
         <div class="section-title">2. Google Drive లింక్ ఇవ్వండి:</div>
         <input type="text" id="drive-link" placeholder="https://drive.google.com/file/d/..." class="input-box">
-        
-        <button class="btn-process" onclick="processEpaper()">ఈ-పేపర్ ప్రాసెస్ చేయండి</button>
+        <button class="btn-process" onclick="processEpaper()">ఈ-పేపర్ లోడ్ చేయండి</button>
     </div>
 
-    <!-- Viewer Section -->
+    <!-- 2. Main E-Paper Viewer Section -->
     <div id="viewer-section">
-        <div class="controls">
-            <button class="btn-action" id="prev-page">గత పేజీ</button>
-            <span>పేజీ: <span id="page-num">1</span> / <span id="page-count">0</span></span>
-            <button class="btn-action" id="next-page">తర్వాతి పేజీ</button>
-            <button class="btn-action btn-download" id="crop-download-btn">వార్తను లోగోతో డౌన్‌లోడ్ చేయండి</button>
+        <div class="header-bar">
+            <button class="btn-action btn-crop" id="crop-toggle-btn" onclick="toggleCropMode()">✂️ వార్త క్రాప్ చేయండి</button>
+            <button class="btn-action btn-download" onclick="exportSelectedNews('download')">📥 క్రాప్ చేసిన వార్త డౌన్‌లోడ్</button>
+            <button class="btn-action btn-whatsapp" onclick="exportSelectedNews('whatsapp')">💬 WhatsApp లో షేర్ చేయండి</button>
         </div>
 
-        <div id="canvas-container">
-            <canvas id="pdf-canvas"></canvas>
-        </div>
+        <!-- Vertical list of page canvases -->
+        <div id="pages-container"></div>
     </div>
 
     <script>
-        let pdfDoc = null, pageNum = 1, scale = 1.5;
-        const canvas = document.getElementById('pdf-canvas');
-        const ctx = canvas.getContext('2d');
+        let pdfDoc = null;
+        let isCropMode = false;
+        let activeCanvas = null;
+        let startX, startY, endX, endY;
+        let isSelecting = false;
+        let cropBox = null;
 
         function processEpaper() {
             const fileInput = document.getElementById('pdf-upload');
@@ -149,125 +142,220 @@
                 };
                 fileReader.readAsArrayBuffer(file);
             } else if (driveLink !== "") {
-                let fileId = "";
                 const match = driveLink.match(/\/d\/([a-zA-Z0-9_-]+)/);
                 if (match && match[1]) {
-                    fileId = match[1];
-                }
-
-                if (fileId) {
-                    const directUrl = `https://docs.google.com/uc?export=download&id=${fileId}`;
-                    loadPDFUrl(directUrl);
+                    const directUrl = `https://docs.google.com/uc?export=download&id=${match[1]}`;
+                    pdfjsLib.getDocument(directUrl).promise.then(loadPDFData).catch(err => {
+                        alert("Google Drive PDF లోడ్ అవ్వలేదు. దయచేసి డైరెక్ట్ PDF ఫైల్ అప్‌లోడ్ చేయండి.");
+                    });
                 } else {
-                    alert("చెల్లుబాటు అయ్యే Google Drive లింక్ ఎంటర్ చేయండి!");
+                    alert("దయచేసి సరియైన Google Drive లింక్ ఇవ్వండి.");
                 }
             } else {
-                alert("దయచేసి ఒక PDF ఫైల్‌ను ఎంచుకోండి లేదా Google Drive లింక్‌ను ఇవ్వండి.");
+                alert("దయచేసి ఒక PDF ఫైల్‌ను ఎంచుకోండి.");
             }
         }
 
         function loadPDF(data) {
-            pdfjsLib.getDocument(data).promise.then(function(pdf) {
-                pdfDoc = pdf;
-                document.getElementById('page-count').textContent = pdf.numPages;
-                document.getElementById('upload-card').style.display = 'none';
-                document.getElementById('viewer-section').style.display = 'block';
-                pageNum = 1;
-                renderPage(pageNum);
-            }).catch(function(error) {
-                alert("PDF లోడ్ చేయడంలో విఫలమైంది: " + error.message);
-            });
+            pdfjsLib.getDocument(data).promise.then(loadPDFData);
         }
 
-        function loadPDFUrl(url) {
-            pdfjsLib.getDocument(url).promise.then(function(pdf) {
-                pdfDoc = pdf;
-                document.getElementById('page-count').textContent = pdf.numPages;
-                document.getElementById('upload-card').style.display = 'none';
-                document.getElementById('viewer-section').style.display = 'block';
-                pageNum = 1;
-                renderPage(pageNum);
-            }).catch(function(error) {
-                alert("Google Drive నుండి PDF లోడ్ కాలేదు. దయచేసి నేరుగా PDF File అప్‌లోడ్ చేయండి.");
-            });
+        function loadPDFData(pdf) {
+            pdfDoc = pdf;
+            document.getElementById('upload-card').style.display = 'none';
+            document.getElementById('viewer-section').style.display = 'block';
+            renderAllPages();
         }
 
-        function renderPage(num) {
-            pdfDoc.getPage(num).then(function(page) {
-                const viewport = page.getViewport({ scale: scale });
+        // Render all pages vertically (వరుసగా ఒకదాని కింద ఒకటి)
+        async function renderAllPages() {
+            const container = document.getElementById('pages-container');
+            container.innerHTML = '';
+
+            for (let num = 1; num <= pdfDoc.numPages; num++) {
+                const page = await pdfDoc.getPage(num);
+                const viewport = page.getViewport({ scale: 1.5 });
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'page-wrapper';
+                wrapper.dataset.pageNum = num;
+
+                const canvas = document.createElement('canvas');
                 canvas.height = viewport.height;
                 canvas.width = viewport.width;
-                const renderContext = { canvasContext: ctx, viewport: viewport };
-                page.render(renderContext);
-                document.getElementById('page-num').textContent = num;
-            });
+
+                const ctx = canvas.getContext('2d');
+                await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+
+                const cBox = document.createElement('div');
+                cBox.className = 'crop-box';
+
+                wrapper.appendChild(canvas);
+                wrapper.appendChild(cBox);
+                container.appendChild(wrapper);
+
+                enableSelection(wrapper, canvas, cBox);
+            }
         }
 
-        document.getElementById('prev-page').addEventListener('click', () => {
-            if (pageNum <= 1) return;
-            pageNum--;
-            renderPage(pageNum);
-        });
+        function toggleCropMode() {
+            isCropMode = !isCropMode;
+            const btn = document.getElementById('crop-toggle-btn');
+            if (isCropMode) {
+                btn.style.backgroundColor = "#ff9900";
+                btn.innerText = "మౌస్ తో వార్తను డ్రాగ్ చేసి సెలెక్ట్ చేయండి";
+            } else {
+                btn.style.backgroundColor = "#007bff";
+                btn.innerText = "✂️ వార్త క్రాప్ చేయండి";
+            }
+        }
 
-        document.getElementById('next-page').addEventListener('click', () => {
-            if (pageNum >= pdfDoc.numPages) return;
-            pageNum++;
-            renderPage(pageNum);
-        });
+        // Mouse & Touch selection logic for news cropping
+        function enableSelection(wrapper, canvasEl, boxEl) {
+            function getCoords(e) {
+                const rect = canvasEl.getBoundingClientRect();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                return {
+                    x: clientX - rect.left,
+                    y: clientY - rect.top
+                };
+            }
 
-        // లోగోతో డౌన్‌లోడ్
-        document.getElementById('crop-download-btn').addEventListener('click', function() {
-            if (!pdfDoc) return;
+            function startSelect(e) {
+                if (!isCropMode) return;
+                isSelecting = true;
+                activeCanvas = canvasEl;
+                cropBox = boxEl;
+                const coords = getCoords(e);
+                startX = coords.x;
+                startY = coords.y;
+                cropBox.style.left = startX + 'px';
+                cropBox.style.top = startY + 'px';
+                cropBox.style.width = '0px';
+                cropBox.style.height = '0px';
+                cropBox.style.display = 'block';
+            }
 
-            const tempCanvas = document.createElement('canvas');
-            const tempCtx = tempCanvas.getContext('2d');
-            
+            function moveSelect(e) {
+                if (!isSelecting || activeCanvas !== canvasEl) return;
+                const coords = getCoords(e);
+                endX = coords.x;
+                endY = coords.y;
+                const width = Math.abs(endX - startX);
+                const height = Math.abs(endY - startY);
+                cropBox.style.width = width + 'px';
+                cropBox.style.height = height + 'px';
+                cropBox.style.left = Math.min(startX, endX) + 'px';
+                cropBox.style.top = Math.min(startY, endY) + 'px';
+            }
+
+            function endSelect() {
+                isSelecting = false;
+            }
+
+            canvasEl.addEventListener('mousedown', startSelect);
+            canvasEl.addEventListener('mousemove', moveSelect);
+            window.addEventListener('mouseup', endSelect);
+
+            canvasEl.addEventListener('touchstart', startSelect);
+            canvasEl.addEventListener('touchmove', moveSelect);
+            window.addEventListener('touchend', endSelect);
+        }
+
+        // Export cropped news or full page with Header Logo
+        function exportSelectedNews(actionType) {
+            if (!activeCanvas && document.querySelector('canvas')) {
+                activeCanvas = document.querySelector('canvas'); // Default to 1st page if not selected
+            }
+            if (!activeCanvas) {
+                alert("దయచేసి పేజీ నుండి ఏదైనా వార్తను క్రాప్ చేయండి.");
+                return;
+            }
+
+            const scaleRatio = activeCanvas.width / activeCanvas.clientWidth;
+            let cropX = 0, cropY = 0, cropW = activeCanvas.width, cropH = activeCanvas.height;
+
+            if (cropBox && cropBox.style.display === 'block') {
+                cropX = parseFloat(cropBox.style.left) * scaleRatio;
+                cropY = parseFloat(cropBox.style.top) * scaleRatio;
+                cropW = parseFloat(cropBox.style.width) * scaleRatio;
+                cropH = parseFloat(cropBox.style.height) * scaleRatio;
+            }
+
+            if (cropW <= 0 || cropH <= 0) {
+                cropX = 0; cropY = 0; cropW = activeCanvas.width; cropH = activeCanvas.height;
+            }
+
+            const headerHeight = 110;
+            const outputCanvas = document.createElement('canvas');
+            const outCtx = outputCanvas.getContext('2d');
+
+            outputCanvas.width = cropW;
+            outputCanvas.height = cropH + headerHeight;
+
+            outCtx.fillStyle = '#ffffff';
+            outCtx.fillRect(0, 0, outputCanvas.width, outputCanvas.height);
+
             const logo = new Image();
             logo.crossOrigin = "Anonymous";
-            logo.src = 'logo.png.jpg'; 
 
-            logo.onload = function() {
-                const logoHeaderHeight = 110; 
-                tempCanvas.width = canvas.width;
-                tempCanvas.height = canvas.height + logoHeaderHeight;
+            // ఇక్కడ లోగో రూట్ మరియు src ఫోల్డర్ల నుండి ఆటోమేటిక్‌గా లోడ్ అవుతుంది
+            logo.src = 'src/logo.png.jpg';
 
-                tempCtx.fillStyle = "#ffffff";
-                tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+            function drawAndExport() {
+                if (logo.complete && logo.naturalWidth !== 0) {
+                    const lWidth = Math.min(outputCanvas.width * 0.7, 340);
+                    const lHeight = (logo.height / logo.width) * lWidth;
+                    outCtx.drawImage(logo, (outputCanvas.width - lWidth) / 2, 10, lWidth, lHeight);
+                } else {
+                    outCtx.fillStyle = "#cc0000";
+                    outCtx.font = "bold 28px Arial";
+                    outCtx.textAlign = "center";
+                    outCtx.fillText("యువగళం దినపత్రిక", outputCanvas.width / 2, 55);
+                }
 
-                const logoWidth = Math.min(tempCanvas.width * 0.6, 350);
-                const logoHeight = (logo.height / logo.width) * logoWidth;
-                const logoX = (tempCanvas.width - logoWidth) / 2;
-                tempCtx.drawImage(logo, logoX, 10, logoWidth, logoHeight);
+                outCtx.drawImage(activeCanvas, cropX, cropY, cropW, cropH, 0, headerHeight, cropW, cropH);
 
-                tempCtx.drawImage(canvas, 0, logoHeaderHeight);
+                if (actionType === 'download') {
+                    const link = document.createElement('a');
+                    link.download = 'Yuvagalam-News.png';
+                    link.href = outputCanvas.toDataURL('image/png');
+                    link.click();
+                } else if (actionType === 'whatsapp') {
+                    const imageData = outputCanvas.toDataURL('image/png');
+                    const text = encodeURIComponent("యువగళం ఈ-పేపర్ వార్త చూడండి: " + window.location.href);
+                    window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+                }
+            }
 
-                const link = document.createElement('a');
-                link.download = 'Yuvagalam-News-Page.png';
-                link.href = tempCanvas.toDataURL('image/png');
-                link.click();
-            };
-
+            logo.onload = drawAndExport;
             logo.onerror = function() {
-                const logoHeaderHeight = 90;
-                tempCanvas.width = canvas.width;
-                tempCanvas.height = canvas.height + logoHeaderHeight;
-
-                tempCtx.fillStyle = "#ffffff";
-                tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-
-                tempCtx.fillStyle = "#cc0000";
-                tempCtx.font = "bold 32px Arial";
-                tempCtx.textAlign = "center";
-                tempCtx.fillText("యువగళం దినపత్రిక", tempCanvas.width / 2, 55);
-
-                tempCtx.drawImage(canvas, 0, logoHeaderHeight);
-
-                const link = document.createElement('a');
-                link.download = 'Yuvagalam-News-Page.png';
-                link.href = tempCanvas.toDataURL('image/png');
-                link.click();
+                // ఒకవేళ src/ లోగో లేకపోతే Root folder నుండి వెతుకుతుంది
+                const fallbackLogo = new Image();
+                fallbackLogo.src = 'logo.png.jpg';
+                fallbackLogo.onload = function() {
+                    const lWidth = Math.min(outputCanvas.width * 0.7, 340);
+                    const lHeight = (fallbackLogo.height / fallbackLogo.width) * lWidth;
+                    outCtx.drawImage(fallbackLogo, (outputCanvas.width - lWidth) / 2, 10, lWidth, lHeight);
+                    outCtx.drawImage(activeCanvas, cropX, cropY, cropW, cropH, 0, headerHeight, cropW, cropH);
+                    finishExport(outputCanvas, actionType);
+                };
+                fallbackLogo.onerror = drawAndExport;
             };
-        });
+        }
+
+        function finishExport(outputCanvas, actionType) {
+            if (actionType === 'download') {
+                const link = document.createElement('a');
+                link.download = 'Yuvagalam-News.png';
+                link.href = outputCanvas.toDataURL('image/png');
+                link.click();
+            } else if (actionType === 'whatsapp') {
+                const text = encodeURIComponent("యువగళం ఈ-పేపర్ వార్త చూడండి: " + window.location.href);
+                window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+            }
+        }
     </script>
 </body>
 </html>
