@@ -217,12 +217,10 @@
                 wrapper.appendChild(cropBox);
                 container.appendChild(wrapper);
 
-                // Set initial active page to 1st page
                 if (num === 1) {
                     setActivePage(wrapper, canvas, cropBox);
                 }
 
-                // Click event to change active page to whichever page user interacts with
                 wrapper.addEventListener('pointerdown', () => {
                     setActivePage(wrapper, canvas, cropBox);
                 });
@@ -239,7 +237,6 @@
             activeCropBox = cropBox;
         }
 
-        // Toggle Crop Box for Current Active Page
         function toggleCropMode() {
             isCropMode = !isCropMode;
             const btn = document.getElementById('crop-toggle-btn');
@@ -255,7 +252,6 @@
                 btn.style.backgroundColor = "#ff9900";
                 btn.innerText = "✖️ క్రాపింగ్ దాచు";
 
-                // Hide crop boxes on all pages first
                 document.querySelectorAll('.crop-box').forEach(box => box.style.display = 'none');
 
                 if (activeCropBox && activeCanvas) {
@@ -277,7 +273,6 @@
             }
         }
 
-        // Drag & Resize Interactivity
         function setupInteractiveCrop(wrapper, canvas, cropBox) {
             let isDragging = false;
             let isResizing = false;
@@ -350,7 +345,7 @@
             });
         }
 
-        // Export cropped news with src/logo.png.jpg Header
+        // Direct Load & Render for logo.png.jpg from Root Directory
         function exportSelectedNews(actionType) {
             if (!activeCanvas) {
                 alert("దయచేసి ఈ-పేపర్ లోడ్ చేయండి.");
@@ -367,61 +362,67 @@
                 cropH = parseFloat(activeCropBox.style.height) * scaleRatio;
             }
 
-            const headerHeight = 120;
+            const headerHeight = 130;
             const outputCanvas = document.createElement('canvas');
             const outCtx = outputCanvas.getContext('2d');
 
             outputCanvas.width = cropW;
             outputCanvas.height = cropH + headerHeight;
 
-            // Load logo image from src/logo.png.jpg
+            // Direct reference to logo.png.jpg in Root Folder
             const logo = new Image();
-            logo.src = 'src/logo.png.jpg';
+            logo.src = 'logo.png.jpg';
 
             logo.onload = function() {
-                generateOutput(logo);
+                generateCanvas(logo);
             };
 
             logo.onerror = function() {
-                // Fallback to root logo.png.jpg if src path fails
-                const logoFallback = new Image();
-                logoFallback.src = 'logo.png.jpg';
-                logoFallback.onload = function() {
-                    generateOutput(logoFallback);
+                // Fallback attempt to src folder if root fails for any server reasons
+                const fallbackLogo = new Image();
+                fallbackLogo.src = 'src/logo.png.jpg';
+                fallbackLogo.onload = function() {
+                    generateCanvas(fallbackLogo);
                 };
-                logoFallback.onerror = function() {
-                    generateOutput(null);
+                fallbackLogo.onerror = function() {
+                    generateCanvas(null);
                 };
             };
 
-            function generateOutput(logoImg) {
-                // 1. Draw Background
+            function generateCanvas(logoImg) {
+                // Background
                 outCtx.fillStyle = '#ffffff';
                 outCtx.fillRect(0, 0, outputCanvas.width, outputCanvas.height);
 
-                // 2. Draw Header Logo
+                // Header Logo Processing
                 if (logoImg) {
-                    const maxLogoWidth = Math.min(outputCanvas.width * 0.85, 400);
-                    const logoAspectRatio = logoImg.height / logoImg.width;
-                    const lWidth = maxLogoWidth;
-                    const lHeight = lWidth * logoAspectRatio;
+                    const padding = 10;
+                    const maxH = headerHeight - (padding * 2);
+                    const maxW = outputCanvas.width - (padding * 2);
                     
-                    const posX = (outputCanvas.width - lWidth) / 2;
-                    const posY = (headerHeight - lHeight) / 2;
+                    let drawWidth = logoImg.width;
+                    let drawHeight = logoImg.height;
 
-                    outCtx.drawImage(logoImg, posX, posY, lWidth, lHeight);
+                    // Maintain aspect ratio while scaling to fit header
+                    const ratio = Math.min(maxW / drawWidth, maxH / drawHeight);
+                    drawWidth = drawWidth * ratio;
+                    drawHeight = drawHeight * ratio;
+
+                    const posX = (outputCanvas.width - drawWidth) / 2;
+                    const posY = (headerHeight - drawHeight) / 2;
+
+                    outCtx.drawImage(logoImg, posX, posY, drawWidth, drawHeight);
                 } else {
-                    // Default Header Text if image fails
                     outCtx.fillStyle = "#cc0000";
                     outCtx.font = "bold 32px Arial";
                     outCtx.textAlign = "center";
-                    outCtx.fillText("యువగళం దినపత్రిక", outputCanvas.width / 2, 65);
+                    outCtx.fillText("యువగళం దినపత్రిక", outputCanvas.width / 2, 70);
                 }
 
-                // 3. Draw Cropped News Content
+                // Cropped News Image Drawing
                 outCtx.drawImage(activeCanvas, cropX, cropY, cropW, cropH, 0, headerHeight, cropW, cropH);
 
-                // 4. Download / Share
+                // Action Triggers
                 if (actionType === 'download') {
                     const link = document.createElement('a');
                     link.download = `Yuvagalam-News-Page${activeWrapper ? activeWrapper.dataset.pageNum : 1}.png`;
