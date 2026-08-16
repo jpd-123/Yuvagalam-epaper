@@ -102,7 +102,7 @@
 </head>
 <body>
 
-    <!-- Upload Interface -->
+    <!-- Upload Card Interface -->
     <div class="upload-card" id="upload-card">
         <h2>యువగళం ఈ-పేపర్ అప్‌లోడ్</h2>
         
@@ -141,7 +141,6 @@
             const driveLink = document.getElementById('drive-link').value.trim();
 
             if (fileInput.files.length > 0) {
-                // నేరుగా PDF ఫైల్ ఎంచుకుంటే
                 const file = fileInput.files[0];
                 const fileReader = new FileReader();
                 fileReader.onload = function() {
@@ -150,7 +149,6 @@
                 };
                 fileReader.readAsArrayBuffer(file);
             } else if (driveLink !== "") {
-                // Google Drive లింక్ ఇస్తే - డైరెక్ట్ డౌన్‌లోడ్ లింక్‌గా మార్చి లోడ్ చేయడం
                 let fileId = "";
                 const match = driveLink.match(/\/d\/([a-zA-Z0-9_-]+)/);
                 if (match && match[1]) {
@@ -190,7 +188,7 @@
                 pageNum = 1;
                 renderPage(pageNum);
             }).catch(function(error) {
-                alert("Google Drive నుండి PDF లోడ్ కాలేదు. దయచేసి Drive Link 'Anyone with the link' (పబ్లిక్) గా ఉందో లేదో చూడండి లేదా నేరుగా PDF File అప్‌లోడ్ చేయండి.");
+                alert("Google Drive నుండి PDF లోడ్ కాలేదు. దయచేసి నేరుగా PDF File అప్‌లోడ్ చేయండి.");
             });
         }
 
@@ -217,7 +215,7 @@
             renderPage(pageNum);
         });
 
-        // వార్తను పైన లోగోతో డౌన్‌లోడ్ చేసే లాజిక్
+        // లోగోతో డౌన్‌లోడ్
         document.getElementById('crop-download-btn').addEventListener('click', function() {
             if (!pdfDoc) return;
 
