@@ -145,6 +145,17 @@
         let activeWrapper = null;
         let activeCanvas = null;
         let activeCropBox = null;
+        let currentPdfUrl = "";
+
+        // Auto-check URL parameters on page load for WhatsApp shared links
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const pdfParam = urlParams.get('pdf');
+            if (pdfParam) {
+                document.getElementById('drive-link').value = pdfParam;
+                loadFromUrl(pdfParam);
+            }
+        });
 
         function processEpaper() {
             const fileInput = document.getElementById('pdf-upload');
@@ -159,18 +170,27 @@
                 };
                 fileReader.readAsArrayBuffer(file);
             } else if (driveLink !== "") {
-                const match = driveLink.match(/\/d\/([a-zA-Z0-9_-]+)/);
-                if (match && match[1]) {
-                    const directUrl = `https://docs.google.com/uc?export=download&id=${match[1]}`;
-                    pdfjsLib.getDocument(directUrl).promise.then(loadPDFData).catch(err => {
-                        alert("Google Drive PDF లోడ్ అవ్వలేదు. దయచేసి PDF ఫైల్ అప్‌లోడ్ చేయండి.");
-                    });
-                } else {
-                    alert("దయచేసి సరియైన Google Drive లింక్ ఇవ్వండి.");
-                }
+                loadFromUrl(driveLink);
             } else {
-                alert("దయచేసి ఒక PDF ఫైల్‌ను ఎంచుకోండి.");
+                alert("దయచేసి ఒక PDF ఫైల్‌ను లేదా Google Drive లింక్‌ను ఎంచుకోండి.");
             }
+        }
+
+        function loadFromUrl(url) {
+            currentPdfUrl = url;
+            const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+            let directUrl = url;
+            if (match && match[1]) {
+                directUrl = `https://docs.google.com/uc?export=download&id=${match[1]}`;
+            }
+
+            // Update browser URL without reloading so link can be copied/shared easily
+            const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?pdf=' + encodeURIComponent(url);
+            window.history.pushState({ path: newUrl }, '', newUrl);
+
+            pdfjsLib.getDocument(directUrl).promise.then(loadPDFData).catch(err => {
+                alert("Google Drive PDF లోడ్ అవ్వలేదు. సరియైన లింక్ ఇవ్వండి లేదా PDF అప్‌లోడ్ చేయండి.");
+            });
         }
 
         function loadPDF(data) {
@@ -345,7 +365,7 @@
             });
         }
 
-        // Direct Load & Render for logo.png.jpg from Root Directory
+        // Export Cropped News with Fully Scaled Logo Header
         function exportSelectedNews(actionType) {
             if (!activeCanvas) {
                 alert("దయచేసి ఈ-పేపర్ లోడ్ చేయండి.");
@@ -362,25 +382,25 @@
                 cropH = parseFloat(activeCropBox.style.height) * scaleRatio;
             }
 
-            const headerHeight = 130;
+            // Dynamically scale header height based on news crop width (1:4 aspect ratio approx for header)
+            const dynamicHeaderHeight = Math.max(80, Math.min(cropW * 0.25, 180));
             const outputCanvas = document.createElement('canvas');
             const outCtx = outputCanvas.getContext('2d');
 
             outputCanvas.width = cropW;
-            outputCanvas.height = cropH + headerHeight;
+            outputCanvas.height = cropH + dynamicHeaderHeight;
 
-            // Direct reference to logo.png.jpg in Root Folder
             const logo = new Image();
-            logo.src = 'logo.png.jpg';
+            // Checking both absolute and relative paths
+            logo.src = 'logo.png.jpg?' + new Date().getTime(); 
 
             logo.onload = function() {
                 generateCanvas(logo);
             };
 
             logo.onerror = function() {
-                // Fallback attempt to src folder if root fails for any server reasons
                 const fallbackLogo = new Image();
-                fallbackLogo.src = 'src/logo.png.jpg';
+                fallbackLogo.src = 'src/logo.png.jpg?' + new Date().getTime();
                 fallbackLogo.onload = function() {
                     generateCanvas(fallbackLogo);
                 };
@@ -390,46 +410,50 @@
             };
 
             function generateCanvas(logoImg) {
-                // Background
+                // Background Fill
                 outCtx.fillStyle = '#ffffff';
                 outCtx.fillRect(0, 0, outputCanvas.width, outputCanvas.height);
 
-                // Header Logo Processing
+                // Dynamic Header Logo Positioning & Scaling based on Crop Width
                 if (logoImg) {
                     const padding = 10;
-                    const maxH = headerHeight - (padding * 2);
                     const maxW = outputCanvas.width - (padding * 2);
-                    
-                    let drawWidth = logoImg.width;
-                    let drawHeight = logoImg.height;
+                    const maxH = dynamicHeaderHeight - (padding * 2);
 
-                    // Maintain aspect ratio while scaling to fit header
-                    const ratio = Math.min(maxW / drawWidth, maxH / drawHeight);
-                    drawWidth = drawWidth * ratio;
-                    drawHeight = drawHeight * ratio;
+                    const logoAspectRatio = logoImg.width / logoImg.height;
+
+                    let drawWidth = maxW;
+                    let drawHeight = drawWidth / logoAspectRatio;
+
+                    if (drawHeight > maxH) {
+                        drawHeight = maxH;
+                        drawWidth = drawHeight * logoAspectRatio;
+                    }
 
                     const posX = (outputCanvas.width - drawWidth) / 2;
-                    const posY = (headerHeight - drawHeight) / 2;
+                    const posY = (dynamicHeaderHeight - drawHeight) / 2;
 
                     outCtx.drawImage(logoImg, posX, posY, drawWidth, drawHeight);
                 } else {
                     outCtx.fillStyle = "#cc0000";
-                    outCtx.font = "bold 32px Arial";
+                    outCtx.font = `bold ${Math.round(dynamicHeaderHeight * 0.35)}px Arial`;
                     outCtx.textAlign = "center";
-                    outCtx.fillText("యువగళం దినపత్రిక", outputCanvas.width / 2, 70);
+                    outCtx.fillText("యువగళం దినపత్రిక", outputCanvas.width / 2, dynamicHeaderHeight * 0.6);
                 }
 
-                // Cropped News Image Drawing
-                outCtx.drawImage(activeCanvas, cropX, cropY, cropW, cropH, 0, headerHeight, cropW, cropH);
+                // Draw Cropped News Below Header
+                outCtx.drawImage(activeCanvas, cropX, cropY, cropW, cropH, 0, dynamicHeaderHeight, cropW, cropH);
 
-                // Action Triggers
+                // Action Actions
                 if (actionType === 'download') {
                     const link = document.createElement('a');
                     link.download = `Yuvagalam-News-Page${activeWrapper ? activeWrapper.dataset.pageNum : 1}.png`;
                     link.href = outputCanvas.toDataURL('image/png');
                     link.click();
                 } else if (actionType === 'whatsapp') {
-                    const text = encodeURIComponent("యువగళం ఈ-పేపర్ వార్త చూడండి: " + window.location.href);
+                    // Send URL with PDF parameter so recipients can view directly without re-uploading
+                    const currentShareUrl = window.location.href;
+                    const text = encodeURIComponent("యువగళం ఈ-పేపర్ వార్త చూడండి: " + currentShareUrl);
                     window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
                 }
             }
