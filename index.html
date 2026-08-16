@@ -4,459 +4,112 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>యువగళం ఈ-పేపర్</title>
-    <!-- PDF.js Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <style>
-        * { box-sizing: border-box; }
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f7f6;
-            margin: 0;
-            padding: 10px;
-            text-align: center;
-            user-select: none;
-        }
-        .upload-card {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            max-width: 480px;
-            margin: 20px auto;
-        }
-        h2 { color: #cc0000; margin-bottom: 20px; }
-        .section-title { text-align: left; font-weight: bold; margin: 10px 0 5px 0; color: #333; }
-        .input-box {
-            border: 1px solid #ccc;
-            padding: 10px;
-            border-radius: 6px;
-            width: 100%;
-            margin-bottom: 12px;
-        }
-        .btn-process {
-            background-color: #cc0000;
-            color: white;
-            border: none;
-            padding: 12px;
-            width: 100%;
-            border-radius: 6px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .btn-process:hover { background-color: #990000; }
-        
-        #viewer-section { display: none; margin-top: 15px; }
-        .header-bar {
-            background: #ffffff;
-            padding: 10px;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        .btn-action {
-            padding: 9px 15px;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            border-radius: 5px;
-            border: none;
-        }
-        .btn-crop { background-color: #007bff; color: white; }
-        .btn-download { background-color: #28a745; color: white; }
-        .btn-whatsapp { background-color: #25D366; color: white; }
-        
-        #pages-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
-            margin-top: 15px;
-        }
-        .page-wrapper {
-            position: relative;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-            background: white;
-            max-width: 100%;
-            overflow: hidden;
-            border: 2px solid transparent;
-        }
-        .page-wrapper.active-page {
-            border-color: #007bff;
-        }
-        canvas { display: block; max-width: 100%; height: auto; }
-        
-        /* Interactive Resizable Crop Box */
-        .crop-box {
-            position: absolute;
-            border: 2px dashed #007bff;
-            background-color: rgba(0, 123, 255, 0.15);
-            display: none;
-            cursor: move;
-            z-index: 50;
-            touch-action: none;
-        }
-        .crop-handle {
-            width: 14px;
-            height: 14px;
-            background: #007bff;
-            position: absolute;
-            border: 2px solid white;
-            border-radius: 50%;
-        }
-        .handle-nw { top: -7px; left: -7px; cursor: nwse-resize; }
-        .handle-ne { top: -7px; right: -7px; cursor: nesw-resize; }
-        .handle-sw { bottom: -7px; left: -7px; cursor: nesw-resize; }
-        .handle-se { bottom: -7px; right: -7px; cursor: nwse-resize; }
+        body { font-family: Arial, sans-serif; background: #f4f7f6; text-align: center; margin: 0; padding: 10px; }
+        .card { background: white; padding: 20px; border-radius: 10px; max-width: 450px; margin: 20px auto; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .btn { background: #cc0000; color: white; padding: 12px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; }
+        #viewer-section { display: none; }
+        .header-bar { background: #fff; padding: 10px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; justify-content: center; gap: 10px; }
+        .btn-action { padding: 8px 15px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; }
+        .btn-crop { background: #007bff; color: white; }
+        .btn-download { background: #28a745; color: white; }
+        .btn-wa { background: #25D366; color: white; }
+        canvas { max-width: 100%; height: auto; box-shadow: 0 2px 8px rgba(0,0,0,0.2); margin-bottom: 15px; }
     </style>
 </head>
 <body>
 
-    <!-- 1. Upload Section -->
-    <div class="upload-card" id="upload-card">
-        <h2>యువగళం ఈ-పేపర్ అప్‌లోడ్</h2>
-        <div class="section-title">1. PDF అప్‌లోడ్ చేయండి:</div>
-        <input type="file" id="pdf-upload" accept="application/pdf" class="input-box">
-        <div style="margin: 10px 0; color: #777;">--- లేదా ---</div>
-        <div class="section-title">2. Google Drive లింక్ ఇవ్వండి:</div>
-        <input type="text" id="drive-link" placeholder="https://drive.google.com/file/d/..." class="input-box">
-        <button class="btn-process" onclick="processEpaper()">ఈ-పేపర్ లోడ్ చేయండి</button>
+    <div class="card" id="upload-card">
+        <h2 style="color:#cc0000;">యువగళం ఈ-పేపర్ అప్‌లోడ్</h2>
+        <input type="file" id="pdf-file" accept="application/pdf" style="width:100%; margin-bottom:10px;">
+        <button class="btn" onclick="uploadAndLoadPDF()">ఈ-పేపర్ లోడ్ చేయండి</button>
+        <p id="status-text" style="color: blue; display: none;">ఫైల్ అప్‌లోడ్ అవుతోంది... దయచేసి వేచి ఉండండి.</p>
     </div>
 
-    <!-- 2. Main Viewer Section -->
     <div id="viewer-section">
         <div class="header-bar">
-            <button class="btn-action btn-crop" id="crop-toggle-btn" onclick="toggleCropMode()">✂️ వార్త క్రాప్ చేయండి</button>
-            <button class="btn-action btn-download" onclick="exportSelectedNews('download')">📥 క్రాప్ చేసిన వార్త డౌన్‌లోడ్</button>
-            <button class="btn-action btn-whatsapp" onclick="exportSelectedNews('whatsapp')">💬 WhatsApp లో షేర్ చేయండి</button>
+            <button class="btn-action btn-download" onclick="downloadCropped()">📥 డౌన్‌లోడ్</button>
+            <button class="btn-action btn-wa" onclick="shareWhatsApp()">💬 WhatsApp లో షేర్ చేయండి</button>
         </div>
-
         <div id="pages-container"></div>
     </div>
 
     <script>
-        let pdfDoc = null;
-        let isCropMode = false;
-        let activeWrapper = null;
-        let activeCanvas = null;
-        let activeCropBox = null;
         let currentPdfUrl = "";
 
-        // Auto-check URL parameters on page load for WhatsApp shared links
+        // Check URL on Load for shared links
         window.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
             const pdfParam = urlParams.get('pdf');
             if (pdfParam) {
-                document.getElementById('drive-link').value = pdfParam;
-                loadFromUrl(pdfParam);
+                document.getElementById('upload-card').style.display = 'none';
+                document.getElementById('viewer-section').style.display = 'block';
+                renderPDF(pdfParam);
             }
         });
 
-        function processEpaper() {
-            const fileInput = document.getElementById('pdf-upload');
-            const driveLink = document.getElementById('drive-link').value.trim();
-
-            if (fileInput.files.length > 0) {
-                const file = fileInput.files[0];
-                const fileReader = new FileReader();
-                fileReader.onload = function() {
-                    const typedarray = new Uint8Array(this.result);
-                    loadPDF(typedarray);
-                };
-                fileReader.readAsArrayBuffer(file);
-            } else if (driveLink !== "") {
-                loadFromUrl(driveLink);
-            } else {
-                alert("దయచేసి ఒక PDF ఫైల్‌ను లేదా Google Drive లింక్‌ను ఎంచుకోండి.");
-            }
-        }
-
-        function loadFromUrl(url) {
-            currentPdfUrl = url;
-            const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
-            let directUrl = url;
-            if (match && match[1]) {
-                directUrl = `https://docs.google.com/uc?export=download&id=${match[1]}`;
-            }
-
-            // Update browser URL without reloading so link can be copied/shared easily
-            const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?pdf=' + encodeURIComponent(url);
-            window.history.pushState({ path: newUrl }, '', newUrl);
-
-            pdfjsLib.getDocument(directUrl).promise.then(loadPDFData).catch(err => {
-                alert("Google Drive PDF లోడ్ అవ్వలేదు. సరియైన లింక్ ఇవ్వండి లేదా PDF అప్‌లోడ్ చేయండి.");
-            });
-        }
-
-        function loadPDF(data) {
-            pdfjsLib.getDocument(data).promise.then(loadPDFData);
-        }
-
-        function loadPDFData(pdf) {
-            pdfDoc = pdf;
-            document.getElementById('upload-card').style.display = 'none';
-            document.getElementById('viewer-section').style.display = 'block';
-            renderAllPages();
-        }
-
-        async function renderAllPages() {
-            const container = document.getElementById('pages-container');
-            container.innerHTML = '';
-
-            for (let num = 1; num <= pdfDoc.numPages; num++) {
-                const page = await pdfDoc.getPage(num);
-                const viewport = page.getViewport({ scale: 1.5 });
-
-                const wrapper = document.createElement('div');
-                wrapper.className = 'page-wrapper';
-                wrapper.dataset.pageNum = num;
-
-                const canvas = document.createElement('canvas');
-                canvas.height = viewport.height;
-                canvas.width = viewport.width;
-
-                const ctx = canvas.getContext('2d');
-                await page.render({ canvasContext: ctx, viewport: viewport }).promise;
-
-                // Create Crop Box Overlay
-                const cropBox = document.createElement('div');
-                cropBox.className = 'crop-box';
-                cropBox.innerHTML = `
-                    <div class="crop-handle handle-nw" data-handle="nw"></div>
-                    <div class="crop-handle handle-ne" data-handle="ne"></div>
-                    <div class="crop-handle handle-sw" data-handle="sw"></div>
-                    <div class="crop-handle handle-se" data-handle="se"></div>
-                `;
-
-                wrapper.appendChild(canvas);
-                wrapper.appendChild(cropBox);
-                container.appendChild(wrapper);
-
-                if (num === 1) {
-                    setActivePage(wrapper, canvas, cropBox);
-                }
-
-                wrapper.addEventListener('pointerdown', () => {
-                    setActivePage(wrapper, canvas, cropBox);
-                });
-
-                setupInteractiveCrop(wrapper, canvas, cropBox);
-            }
-        }
-
-        function setActivePage(wrapper, canvas, cropBox) {
-            document.querySelectorAll('.page-wrapper').forEach(w => w.classList.remove('active-page'));
-            wrapper.classList.add('active-page');
-            activeWrapper = wrapper;
-            activeCanvas = canvas;
-            activeCropBox = cropBox;
-        }
-
-        function toggleCropMode() {
-            isCropMode = !isCropMode;
-            const btn = document.getElementById('crop-toggle-btn');
-            
-            if (!activeWrapper) {
-                const firstWrap = document.querySelector('.page-wrapper');
-                if (firstWrap) {
-                    setActivePage(firstWrap, firstWrap.querySelector('canvas'), firstWrap.querySelector('.crop-box'));
-                }
-            }
-
-            if (isCropMode) {
-                btn.style.backgroundColor = "#ff9900";
-                btn.innerText = "✖️ క్రాపింగ్ దాచు";
-
-                document.querySelectorAll('.crop-box').forEach(box => box.style.display = 'none');
-
-                if (activeCropBox && activeCanvas) {
-                    const w = activeCanvas.clientWidth * 0.8;
-                    const h = activeCanvas.clientHeight * 0.4;
-                    const l = (activeCanvas.clientWidth - w) / 2;
-                    const t = (activeCanvas.clientHeight - h) / 3;
-
-                    activeCropBox.style.width = w + 'px';
-                    activeCropBox.style.height = h + 'px';
-                    activeCropBox.style.left = l + 'px';
-                    activeCropBox.style.top = t + 'px';
-                    activeCropBox.style.display = 'block';
-                }
-            } else {
-                btn.style.backgroundColor = "#007bff";
-                btn.innerText = "✂️ వార్త క్రాప్ చేయండి";
-                document.querySelectorAll('.crop-box').forEach(box => box.style.display = 'none');
-            }
-        }
-
-        function setupInteractiveCrop(wrapper, canvas, cropBox) {
-            let isDragging = false;
-            let isResizing = false;
-            let currentHandle = null;
-            let startX, startY, startLeft, startTop, startWidth, startHeight;
-
-            cropBox.addEventListener('pointerdown', (e) => {
-                e.stopPropagation();
-                setActivePage(wrapper, canvas, cropBox);
-
-                if (e.target.classList.contains('crop-handle')) {
-                    isResizing = true;
-                    currentHandle = e.target.dataset.handle;
-                } else {
-                    isDragging = true;
-                }
-
-                startX = e.clientX;
-                startY = e.clientY;
-                startLeft = cropBox.offsetLeft;
-                startTop = cropBox.offsetTop;
-                startWidth = cropBox.offsetWidth;
-                startHeight = cropBox.offsetHeight;
-
-                cropBox.setPointerCapture(e.pointerId);
-            });
-
-            cropBox.addEventListener('pointermove', (e) => {
-                if (!isDragging && !isResizing) return;
-
-                const dx = e.clientX - startX;
-                const dy = e.clientY - startY;
-
-                if (isDragging) {
-                    let newLeft = startLeft + dx;
-                    let newTop = startTop + dy;
-                    newLeft = Math.max(0, Math.min(newLeft, canvas.clientWidth - startWidth));
-                    newTop = Math.max(0, Math.min(newTop, canvas.clientHeight - startHeight));
-
-                    cropBox.style.left = newLeft + 'px';
-                    cropBox.style.top = newTop + 'px';
-                } else if (isResizing) {
-                    if (currentHandle.includes('e')) {
-                        cropBox.style.width = Math.max(50, Math.min(startWidth + dx, canvas.clientWidth - startLeft)) + 'px';
-                    }
-                    if (currentHandle.includes('s')) {
-                        cropBox.style.height = Math.max(50, Math.min(startHeight + dy, canvas.clientHeight - startTop)) + 'px';
-                    }
-                    if (currentHandle.includes('w')) {
-                        const nw = Math.max(50, startWidth - dx);
-                        if (nw !== 50) {
-                            cropBox.style.width = nw + 'px';
-                            cropBox.style.left = (startLeft + dx) + 'px';
-                        }
-                    }
-                    if (currentHandle.includes('n')) {
-                        const nh = Math.max(50, startHeight - dy);
-                        if (nh !== 50) {
-                            cropBox.style.height = nh + 'px';
-                            cropBox.style.top = (startTop + dy) + 'px';
-                        }
-                    }
-                }
-            });
-
-            cropBox.addEventListener('pointerup', (e) => {
-                isDragging = false;
-                isResizing = false;
-                cropBox.releasePointerCapture(e.pointerId);
-            });
-        }
-
-        // Export Cropped News with Fully Scaled Logo Header
-        function exportSelectedNews(actionType) {
-            if (!activeCanvas) {
-                alert("దయచేసి ఈ-పేపర్ లోడ్ చేయండి.");
+        async function uploadAndLoadPDF() {
+            const fileInput = document.getElementById('pdf-file');
+            if (fileInput.files.length === 0) {
+                alert("దయచేసి PDF ఫైల్‌ను ఎంచుకోండి");
                 return;
             }
 
-            const scaleRatio = activeCanvas.width / activeCanvas.clientWidth;
-            let cropX = 0, cropY = 0, cropW = activeCanvas.width, cropH = activeCanvas.height;
+            const statusText = document.getElementById('status-text');
+            statusText.style.display = 'block';
 
-            if (activeCropBox && activeCropBox.style.display === 'block') {
-                cropX = parseFloat(activeCropBox.style.left) * scaleRatio;
-                cropY = parseFloat(activeCropBox.style.top) * scaleRatio;
-                cropW = parseFloat(activeCropBox.style.width) * scaleRatio;
-                cropH = parseFloat(activeCropBox.style.height) * scaleRatio;
-            }
+            const formData = new FormData();
+            formData.append('pdf', fileInput.files[0]);
 
-            // Dynamically scale header height based on news crop width (1:4 aspect ratio approx for header)
-            const dynamicHeaderHeight = Math.max(80, Math.min(cropW * 0.25, 180));
-            const outputCanvas = document.createElement('canvas');
-            const outCtx = outputCanvas.getContext('2d');
+            try {
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
 
-            outputCanvas.width = cropW;
-            outputCanvas.height = cropH + dynamicHeaderHeight;
+                if (data.success) {
+                    currentPdfUrl = data.url;
+                    // Address bar link update
+                    const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?pdf=' + encodeURIComponent(data.url);
+                    window.history.pushState({ path: newUrl }, '', newUrl);
 
-            const logo = new Image();
-            // Checking both absolute and relative paths
-            logo.src = 'logo.png.jpg?' + new Date().getTime(); 
-
-            logo.onload = function() {
-                generateCanvas(logo);
-            };
-
-            logo.onerror = function() {
-                const fallbackLogo = new Image();
-                fallbackLogo.src = 'src/logo.png.jpg?' + new Date().getTime();
-                fallbackLogo.onload = function() {
-                    generateCanvas(fallbackLogo);
-                };
-                fallbackLogo.onerror = function() {
-                    generateCanvas(null);
-                };
-            };
-
-            function generateCanvas(logoImg) {
-                // Background Fill
-                outCtx.fillStyle = '#ffffff';
-                outCtx.fillRect(0, 0, outputCanvas.width, outputCanvas.height);
-
-                // Dynamic Header Logo Positioning & Scaling based on Crop Width
-                if (logoImg) {
-                    const padding = 10;
-                    const maxW = outputCanvas.width - (padding * 2);
-                    const maxH = dynamicHeaderHeight - (padding * 2);
-
-                    const logoAspectRatio = logoImg.width / logoImg.height;
-
-                    let drawWidth = maxW;
-                    let drawHeight = drawWidth / logoAspectRatio;
-
-                    if (drawHeight > maxH) {
-                        drawHeight = maxH;
-                        drawWidth = drawHeight * logoAspectRatio;
-                    }
-
-                    const posX = (outputCanvas.width - drawWidth) / 2;
-                    const posY = (dynamicHeaderHeight - drawHeight) / 2;
-
-                    outCtx.drawImage(logoImg, posX, posY, drawWidth, drawHeight);
+                    document.getElementById('upload-card').style.display = 'none';
+                    document.getElementById('viewer-section').style.display = 'block';
+                    renderPDF(data.url);
                 } else {
-                    outCtx.fillStyle = "#cc0000";
-                    outCtx.font = `bold ${Math.round(dynamicHeaderHeight * 0.35)}px Arial`;
-                    outCtx.textAlign = "center";
-                    outCtx.fillText("యువగళం దినపత్రిక", outputCanvas.width / 2, dynamicHeaderHeight * 0.6);
+                    alert("అప్‌లోడ్ విఫలమైంది!");
                 }
-
-                // Draw Cropped News Below Header
-                outCtx.drawImage(activeCanvas, cropX, cropY, cropW, cropH, 0, dynamicHeaderHeight, cropW, cropH);
-
-                // Action Actions
-                if (actionType === 'download') {
-                    const link = document.createElement('a');
-                    link.download = `Yuvagalam-News-Page${activeWrapper ? activeWrapper.dataset.pageNum : 1}.png`;
-                    link.href = outputCanvas.toDataURL('image/png');
-                    link.click();
-                } else if (actionType === 'whatsapp') {
-                    // Send URL with PDF parameter so recipients can view directly without re-uploading
-                    const currentShareUrl = window.location.href;
-                    const text = encodeURIComponent("యువగళం ఈ-పేపర్ వార్త చూడండి: " + currentShareUrl);
-                    window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
-                }
+            } catch (err) {
+                alert("సర్వర్ ఎర్రర్ వచ్చింది.");
+            } finally {
+                statusText.style.display = 'none';
             }
+        }
+
+        async function renderPDF(url) {
+            const pdf = await pdfjsLib.getDocument(url).promise;
+            const container = document.getElementById('pages-container');
+            container.innerHTML = '';
+
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const viewport = page.getViewport({ scale: 1.5 });
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+                container.appendChild(canvas);
+            }
+        }
+
+        function shareWhatsApp() {
+            const shareUrl = window.location.href;
+            const text = encodeURIComponent("యువగళం ఈ-పేపర్ వార్త చూడండి: " + shareUrl);
+            window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
         }
     </script>
 </body>
