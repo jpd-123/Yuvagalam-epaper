@@ -50,7 +50,29 @@ app.post('/api/upload', upload.single('pdf'), (req, res) => {
     const fileUrl = `/uploads/${req.file.filename}`;
     res.json({ success: true, url: fileUrl, filename: req.file.filename });
 });
-
+// WhatsApp Dynamic Link Meta Tags Route
+app.get('/', (req, res) => {
+    const pdfFile = req.query.pdf;
+    const indexPath = path.join(__dirname, 'index.html');
+    
+    fs.readFile(indexPath, 'utf8', (err, htmlData) => {
+        if (err) {
+            return res.status(500).send('Error loading page');
+        }
+        
+        if (pdfFile) {
+            // PDF ఫైల్ ఉంటే డిఫాల్ట్ లోగో ఇమేజ్ స్థానంలో పబ్లిక్ లింక్ ద్వారా సర్వ్ అవుతుంది
+            const dynamicOgImage = `https://${req.get('host')}/logo.png.jpg`;
+            let updatedHtml = htmlData.replace(
+                'https://yuvagalam-epaper.onrender.com/logo.png.jpg',
+                dynamicOgImage
+            );
+            return res.send(updatedHtml);
+        }
+        
+        res.send(htmlData);
+    });
+});
 // CRON JOB: Every day at midnight (00:00), delete files older than 5 days
 cron.schedule('0 0 * * *', () => {
     console.log('5 రోజుల కంటే పాత PDFల డిలీషన్ చెక్ చేస్తున్నాం...');
