@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>యువగళం ఈ-పేపర్</title>
-        <meta property="og:type" content="website" />
+    <meta property="og:type" content="website" />
     <meta property="og:title" content="యువగళం ఈ-పేపర్" />
     <meta property="og:description" content="యువగళం దినపత్రిక ఈ-పేపర్ వార్తలు చదవండి" />
     <meta property="og:image" content="https://yuvagalam-epaper.onrender.com/logo.png.jpg" />
@@ -160,7 +160,7 @@
             const pdfFile = urlParams.get('pdf');
             if (pdfFile) {
                 currentFileName = pdfFile;
-                const fileUrl = `/uploads/${pdfFile}`;
+                const fileUrl = '/uploads/' + pdfFile;
                 document.getElementById('upload-card').style.display = 'none';
                 document.getElementById('viewer-section').style.display = 'block';
                 renderPDFFromUrl(fileUrl);
@@ -247,12 +247,11 @@
 
                 const cropBox = document.createElement('div');
                 cropBox.className = 'crop-box';
-                cropBox.innerHTML = `
-                    <div class="crop-handle handle-nw" data-handle="nw"></div>
-                    <div class="crop-handle handle-ne" data-handle="ne"></div>
-                    <div class="crop-handle handle-sw" data-handle="sw"></div>
-                    <div class="crop-handle handle-se" data-handle="se"></div>
-                `;
+                cropBox.innerHTML = 
+                    '<div class="crop-handle handle-nw" data-handle="nw"></div>' +
+                    '<div class="crop-handle handle-ne" data-handle="ne"></div>' +
+                    '<div class="crop-handle handle-sw" data-handle="sw"></div>' +
+                    '<div class="crop-handle handle-se" data-handle="se"></div>';
 
                 wrapper.appendChild(canvas);
                 wrapper.appendChild(cropBox);
@@ -445,7 +444,7 @@
                     outCtx.drawImage(logoImg, posX, posY, drawWidth, drawHeight);
                 } else {
                     outCtx.fillStyle = "#cc0000";
-                    outCtx.font = `bold ${Math.round(dynamicHeaderHeight * 0.35)}px Arial`;
+                    outCtx.font = "bold " + Math.round(dynamicHeaderHeight * 0.35) + "px Arial";
                     outCtx.textAlign = "center";
                     outCtx.fillText("యువగళం దినపత్రిక", outputCanvas.width / 2, dynamicHeaderHeight * 0.6);
                 }
@@ -454,18 +453,18 @@
 
                 if (actionType === 'download') {
                     const link = document.createElement('a');
-                    link.download = `Yuvagalam-News-${Date.now()}.png`;
+                    link.download = 'Yuvagalam-News-' + Date.now() + '.png';
                     link.href = outputCanvas.toDataURL('image/png');
                     link.click();
                 } else if (actionType === 'whatsapp') {
-                    outputCanvas.toBlob(blob => {
+                    outputCanvas.toBlob(function(blob) {
                         const file = new File([blob], 'Yuvagalam-News.png', { type: 'image/png' });
                         if (navigator.canShare && navigator.canShare({ files: [file] })) {
                             navigator.share({
                                 title: 'యువగళం వార్త',
                                 text: 'యువగళం దినపత్రిక వార్త చూడండి:',
                                 files: [file]
-                            }).catch(() => {});
+                            }).catch(function() {});
                         } else {
                             shareFullEpaper();
                         }
@@ -477,7 +476,7 @@
         function shareFullEpaper() {
             const currentShareUrl = window.location.href;
             const text = encodeURIComponent("యువగళం ఈ-పేపర్ వార్తలు చూడండి: " + currentShareUrl);
-            window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+            window.open('https://api.whatsapp.com/send?text=' + text, '_blank');
         }
     </script>
 </body>
