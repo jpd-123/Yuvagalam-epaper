@@ -160,7 +160,6 @@
             const pdfFile = urlParams.get('pdf');
             if (pdfFile) {
                 currentFileName = pdfFile;
-                // Fetch directly from server uploads
                 const fileUrl = `/uploads/${pdfFile}`;
                 document.getElementById('upload-card').style.display = 'none';
                 document.getElementById('viewer-section').style.display = 'block';
@@ -191,7 +190,6 @@
                 if (data.success) {
                     currentFileName = data.filename;
                     
-                    // Update browser address bar nicely with just filename parameter
                     const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?pdf=' + encodeURIComponent(data.filename);
                     window.history.pushState({ path: newUrl }, '', newUrl);
 
@@ -201,25 +199,25 @@
                     renderPDFFromUrl(data.url);
                 } else {
                     alert("అప్‌లోడ్ విఫలమైంది!");
+                    statusText.style.display = 'none';
                 }
             } catch (err) {
                 alert("సర్వర్ కి కనెక్ట్ అవ్వడంలో ఇబ్బంది వచ్చింది.");
-            } finally {
                 statusText.style.display = 'none';
             }
         }
 
         function renderPDFFromUrl(url) {
-    const loadingTask = pdfjsLib.getDocument({
-        url: url,
-        cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/cmaps/',
-        cMapPacked: true,
-    });
-    
-    loadingTask.promise.then(loadPDFData).catch(err => {
-        console.error("PDF Load Error:", err);
-        alert("PDF లోడ్ చేయడంలో సమస్య వచ్చింది. దయచేసి పేజీని రిఫ్రెష్ చేసి మళ్ళీ ప్రయత్నించండి.");
-    });
+            const loadingTask = pdfjsLib.getDocument({
+                url: url,
+                cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/cmaps/',
+                cMapPacked: true,
+            });
+            
+            loadingTask.promise.then(loadPDFData).catch(err => {
+                console.error("PDF Load Error:", err);
+                alert("PDF లోడ్ చేయడంలో సమస్య వచ్చింది. దయచేసి పేజీని రిఫ్రెష్ చేసి మళ్ళీ ప్రయత్నించండి.");
+            });
         }
 
         function loadPDFData(pdf) {
@@ -233,7 +231,7 @@
 
             for (let num = 1; num <= pdfDoc.numPages; num++) {
                 const page = await pdfDoc.getPage(num);
-                // ఇక్కడ స్కేల్ విలువ 1.5 నుండి 2.5 కి మార్చబడింది (బ్లర్ రాకుండా HD క్వాలిటీ కోసం)
+                // HD క్వాలిటీ కోసం స్కేల్ 2.5 కి సెట్ చేయబడింది
                 const viewport = page.getViewport({ scale: 2.5 });
 
                 const wrapper = document.createElement('div');
@@ -247,7 +245,6 @@
                 const ctx = canvas.getContext('2d');
                 await page.render({ canvasContext: ctx, viewport: viewport }).promise;
 
-                // Crop box element
                 const cropBox = document.createElement('div');
                 cropBox.className = 'crop-box';
                 cropBox.innerHTML = `
@@ -460,7 +457,7 @@
                     link.download = `Yuvagalam-News-${Date.now()}.png`;
                     link.href = outputCanvas.toDataURL('image/png');
                     link.click();
-                } else === 'whatsapp' {
+                } else if (actionType === 'whatsapp') {
                     outputCanvas.toBlob(blob => {
                         const file = new File([blob], 'Yuvagalam-News.png', { type: 'image/png' });
                         if (navigator.canShare && navigator.canShare({ files: [file] })) {
