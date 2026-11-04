@@ -97,7 +97,7 @@
         }
         canvas { display: block; max-width: 100%; height: auto; }
         
-        /* Resizable Interactive Crop Box */
+        /* Resizable Interactive Crop Box with Floating Action Bar inside/top */
         .crop-box {
             position: absolute;
             border: 2px dashed #007bff;
@@ -107,6 +107,32 @@
             z-index: 50;
             touch-action: none;
         }
+        
+        /* Crop box inner floating actions */
+        .crop-actions {
+            position: absolute;
+            top: -45px;
+            left: 0;
+            display: flex;
+            gap: 5px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 4px;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            white-space: nowrap;
+            z-index: 60;
+        }
+        .crop-actions button {
+            padding: 5px 10px;
+            font-size: 12px;
+            font-weight: bold;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .c-btn-dl { background-color: #28a745; color: white; }
+        .c-btn-wa { background-color: #25D366; color: white; }
+
         .crop-handle {
             width: 16px;
             height: 16px;
@@ -136,8 +162,6 @@
     <div id="viewer-section">
         <div class="header-bar">
             <button class="btn-action btn-crop" id="crop-toggle-btn" onclick="toggleCropMode()">✂️ వార్త క్రాప్ చేయండి</button>
-            <button class="btn-action btn-download" onclick="exportSelectedNews('download')">📥 డౌన్‌లోడ్</button>
-            <button class="btn-action btn-whatsapp" onclick="exportSelectedNews('whatsapp')">💬 క్రాప్ వార్త షేర్</button>
             <button class="btn-action btn-whatsapp" style="background-color: #128C7E;" onclick="shareFullEpaper()">🔗 ఈ-పేపర్ లింక్ షేర్</button>
         </div>
 
@@ -231,7 +255,6 @@
 
             for (let num = 1; num <= pdfDoc.numPages; num++) {
                 const page = await pdfDoc.getPage(num);
-                // Ultra HD క్వాలిటీ కోసం స్కేల్ 3.5 కి పెంచబడింది
                 const viewport = page.getViewport({ scale: 3.5 });
 
                 const wrapper = document.createElement('div');
@@ -243,7 +266,6 @@
                 canvas.width = viewport.width;
 
                 const ctx = canvas.getContext('2d');
-                // టెక్స్ట్ షార్ప్‌నెస్ మెరుగుపరచడానికి సెట్టింగ్
                 ctx.imageSmoothingEnabled = true;
                 ctx.imageSmoothingQuality = 'high';
 
@@ -251,11 +273,16 @@
 
                 const cropBox = document.createElement('div');
                 cropBox.className = 'crop-box';
-                cropBox.innerHTML = 
-                    '<div class="crop-handle handle-nw" data-handle="nw"></div>' +
-                    '<div class="crop-handle handle-ne" data-handle="ne"></div>' +
-                    '<div class="crop-handle handle-sw" data-handle="sw"></div>' +
-                    '<div class="crop-handle handle-se" data-handle="se"></div>';
+                cropBox.innerHTML = `
+                    <div class="crop-actions">
+                        <button class="c-btn-dl" onclick="exportSelectedNews('download')">📥 డౌన్‌లోడ్</button>
+                        <button class="c-btn-wa" onclick="exportSelectedNews('whatsapp')">💬 షేర్</button>
+                    </div>
+                    <div class="crop-handle handle-nw" data-handle="nw"></div>
+                    <div class="crop-handle handle-ne" data-handle="ne"></div>
+                    <div class="crop-handle handle-sw" data-handle="sw"></div>
+                    <div class="crop-handle handle-se" data-handle="se"></div>
+                `;
 
                 wrapper.appendChild(canvas);
                 wrapper.appendChild(cropBox);
@@ -294,7 +321,7 @@
 
             if (isCropMode) {
                 btn.style.backgroundColor = "#ff9900";
-                btn.innerText = "✖️ క్రాపింగ్ దాచు";
+                btn.innerText = "✖️ క్రాపింగ్ ఆపు";
 
                 document.querySelectorAll('.crop-box').forEach(box => box.style.display = 'none');
 
@@ -324,6 +351,9 @@
             let startX, startY, startLeft, startTop, startWidth, startHeight;
 
             cropBox.addEventListener('pointerdown', (e) => {
+                // If clicked on action buttons, don't trigger drag/resize
+                if (e.target.tagName === 'BUTTON' || e.target.closest('.crop-actions')) return;
+
                 e.stopPropagation();
                 setActivePage(wrapper, canvas, cropBox);
 
@@ -410,7 +440,6 @@
             const outputCanvas = document.createElement('canvas');
             const outCtx = outputCanvas.getContext('2d');
 
-            // హై-క్వాలిటీ కోసం స్మూతింగ్ ఆన్ చేయడం
             outCtx.imageSmoothingEnabled = true;
             outCtx.imageSmoothingQuality = 'high';
 
@@ -469,23 +498,4 @@
                         const file = new File([blob], 'Yuvagalam-News.png', { type: 'image/png' });
                         if (navigator.canShare && navigator.canShare({ files: [file] })) {
                             navigator.share({
-                                title: 'యువగళం వార్త',
-                                text: 'యువగళం దినపత్రిక వార్త చూడండి:',
-                                files: [file]
-                            }).catch(function() {});
-                        } else {
-                            shareFullEpaper();
-                        }
-                    });
-                }
-            }
-        }
-
-        function shareFullEpaper() {
-            const currentShareUrl = window.location.href;
-            const text = encodeURIComponent("యువగళం ఈ-పేపర్ వార్తలు చూడండి: " + currentShareUrl);
-            window.open('https://api.whatsapp.com/send?text=' + text, '_blank');
-        }
-    </script>
-</body>
-</html>
+          
