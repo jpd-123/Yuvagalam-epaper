@@ -231,8 +231,8 @@
 
             for (let num = 1; num <= pdfDoc.numPages; num++) {
                 const page = await pdfDoc.getPage(num);
-                // HD క్వాలిటీ కోసం స్కేల్ 2.5 కి సెట్ చేయబడింది
-                const viewport = page.getViewport({ scale: 2.5 });
+                // Ultra HD క్వాలిటీ కోసం స్కేల్ 3.5 కి పెంచబడింది
+                const viewport = page.getViewport({ scale: 3.5 });
 
                 const wrapper = document.createElement('div');
                 wrapper.className = 'page-wrapper';
@@ -243,6 +243,10 @@
                 canvas.width = viewport.width;
 
                 const ctx = canvas.getContext('2d');
+                // టెక్స్ట్ షార్ప్‌నెస్ మెరుగుపరచడానికి సెట్టింగ్
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+
                 await page.render({ canvasContext: ctx, viewport: viewport }).promise;
 
                 const cropBox = document.createElement('div');
@@ -405,6 +409,10 @@
             const dynamicHeaderHeight = Math.max(80, Math.min(cropW * 0.25, 180));
             const outputCanvas = document.createElement('canvas');
             const outCtx = outputCanvas.getContext('2d');
+
+            // హై-క్వాలిటీ కోసం స్మూతింగ్ ఆన్ చేయడం
+            outCtx.imageSmoothingEnabled = true;
+            outCtx.imageSmoothingQuality = 'high';
 
             outputCanvas.width = cropW;
             outputCanvas.height = cropH + dynamicHeaderHeight;
