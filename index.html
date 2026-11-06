@@ -74,7 +74,6 @@
             border: none;
         }
         .btn-crop { background-color: #007bff; color: white; }
-        .btn-download { background-color: #28a745; color: white; }
         .btn-whatsapp { background-color: #25D366; color: white; }
         
         #pages-container {
@@ -97,7 +96,7 @@
         }
         canvas { display: block; max-width: 100%; height: auto; }
         
-        /* Resizable Interactive Crop Box with Floating Action Bar inside/top */
+        /* Resizable Interactive Crop Box with Floating Action Bar */
         .crop-box {
             position: absolute;
             border: 2px dashed #007bff;
@@ -108,7 +107,6 @@
             touch-action: none;
         }
         
-        /* Crop box inner floating actions */
         .crop-actions {
             position: absolute;
             top: -45px;
@@ -351,7 +349,6 @@
             let startX, startY, startLeft, startTop, startWidth, startHeight;
 
             cropBox.addEventListener('pointerdown', (e) => {
-                // If clicked on action buttons, don't trigger drag/resize
                 if (e.target.tagName === 'BUTTON' || e.target.closest('.crop-actions')) return;
 
                 e.stopPropagation();
@@ -498,4 +495,7 @@
                         const file = new File([blob], 'Yuvagalam-News.png', { type: 'image/png' });
                         if (navigator.canShare && navigator.canShare({ files: [file] })) {
                             navigator.share({
-          
+                                title: 'యువగళం వార్త',
+                                text: 'యువగళం దినపత్రిక వార్త చూడండి:',
+                                files: [file]
+                            }).catch
