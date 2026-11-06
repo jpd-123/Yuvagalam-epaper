@@ -271,16 +271,15 @@
 
                 const cropBox = document.createElement('div');
                 cropBox.className = 'crop-box';
-                cropBox.innerHTML = `
-                    <div class="crop-actions">
-                        <button class="c-btn-dl" onclick="exportSelectedNews('download')">📥 డౌన్‌లోడ్</button>
-                        <button class="c-btn-wa" onclick="exportSelectedNews('whatsapp')">💬 షేర్</button>
-                    </div>
-                    <div class="crop-handle handle-nw" data-handle="nw"></div>
-                    <div class="crop-handle handle-ne" data-handle="ne"></div>
-                    <div class="crop-handle handle-sw" data-handle="sw"></div>
-                    <div class="crop-handle handle-se" data-handle="se"></div>
-                `;
+                cropBox.innerHTML = 
+                    '<div class="crop-actions">' +
+                        '<button class="c-btn-dl" onclick="exportSelectedNews(\'download\')">📥 డౌన్‌లోడ్</button>' +
+                        '<button class="c-btn-wa" onclick="exportSelectedNews(\'whatsapp\')">💬 షేర్</button>' +
+                    '</div>' +
+                    '<div class="crop-handle handle-nw" data-handle="nw"></div>' +
+                    '<div class="crop-handle handle-ne" data-handle="ne"></div>' +
+                    '<div class="crop-handle handle-sw" data-handle="sw"></div>' +
+                    '<div class="crop-handle handle-se" data-handle="se"></div>';
 
                 wrapper.appendChild(canvas);
                 wrapper.appendChild(cropBox);
@@ -498,4 +497,20 @@
                                 title: 'యువగళం వార్త',
                                 text: 'యువగళం దినపత్రిక వార్త చూడండి:',
                                 files: [file]
-                            }).catch
+                     }).catch(function() {});
+                        } else {
+                            shareFullEpaper();
+                        }
+                    });
+                }
+            }
+        }
+
+        function shareFullEpaper() {
+            const currentShareUrl = window.location.href;
+            const text = encodeURIComponent("యువగళం ఈ-పేపర్ వార్తలు చూడండి: " + currentShareUrl);
+            window.open('https://api.whatsapp.com/send?text=' + text, '_blank');
+        }
+    </script>
+</body>
+</html>
