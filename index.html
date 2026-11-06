@@ -287,8 +287,11 @@
                     setActivePage(wrapper, canvas, cropBox);
                 }
 
-                wrapper.addEventListener('pointerdown', () => {
-                    setActivePage(wrapper, canvas, cropBox);
+                wrapper.addEventListener('pointerdown', (e) => {
+                    // Only change active page if clicking outside the active crop box
+                    if (!activeCropBox || !activeCropBox.contains(e.target)) {
+                        setActivePage(wrapper, canvas, cropBox);
+                    }
                 });
 
                 setupInteractiveCrop(wrapper, canvas, cropBox);
@@ -302,18 +305,23 @@
             activeCanvas = canvas;
             activeCropBox = cropBox;
 
-            // Switch page kaganey automatic ga crop mode active lo unte crop box active page ki move avthundi
             if (isCropMode) {
-                document.querySelectorAll('.crop-box').forEach(box => box.style.display = 'none');
-                const w = activeCanvas.clientWidth * 0.8;
-                const h = activeCanvas.clientHeight * 0.4;
-                const l = (activeCanvas.clientWidth - w) / 2;
-                const t = (activeCanvas.clientHeight - h) / 3;
+                document.querySelectorAll('.crop-box').forEach(box => {
+                    if (box !== activeCropBox) box.style.display = 'none';
+                });
+                
+                // Only initialize if not already positioned on this page
+                if (activeCropBox.style.display !== 'block') {
+                    const w = activeCanvas.clientWidth * 0.8;
+                    const h = activeCanvas.clientHeight * 0.4;
+                    const l = (activeCanvas.clientWidth - w) / 2;
+                    const t = (activeCanvas.clientHeight - h) / 3;
 
-                activeCropBox.style.width = w + 'px';
-                activeCropBox.style.height = h + 'px';
-                activeCropBox.style.left = l + 'px';
-                activeCropBox.style.top = t + 'px';
+                    activeCropBox.style.width = w + 'px';
+                    activeCropBox.style.height = h + 'px';
+                    activeCropBox.style.left = l + 'px';
+                    activeCropBox.style.top = t + 'px';
+                }
                 activeCropBox.style.display = 'block';
             }
         }
@@ -336,15 +344,17 @@
                 document.querySelectorAll('.crop-box').forEach(box => box.style.display = 'none');
 
                 if (activeCropBox && activeCanvas) {
-                    const w = activeCanvas.clientWidth * 0.8;
-                    const h = activeCanvas.clientHeight * 0.4;
-                    const l = (activeCanvas.clientWidth - w) / 2;
-                    const t = (activeCanvas.clientHeight - h) / 3;
+                    if (activeCropBox.style.display !== 'block' || !activeCropBox.style.width) {
+                        const w = activeCanvas.clientWidth * 0.8;
+                        const h = activeCanvas.clientHeight * 0.4;
+                        const l = (activeCanvas.clientWidth - w) / 2;
+                        const t = (activeCanvas.clientHeight - h) / 3;
 
-                    activeCropBox.style.width = w + 'px';
-                    activeCropBox.style.height = h + 'px';
-                    activeCropBox.style.left = l + 'px';
-                    activeCropBox.style.top = t + 'px';
+                        activeCropBox.style.width = w + 'px';
+                        activeCropBox.style.height = h + 'px';
+                        activeCropBox.style.left = l + 'px';
+                        activeCropBox.style.top = t + 'px';
+                    }
                     activeCropBox.style.display = 'block';
                 }
             } else {
@@ -428,7 +438,7 @@
             });
         }
 
-        // Export Cropped News with Increased Logo Size
+        // Export Cropped News with Dynamic Logo Width
         function exportSelectedNews(actionType) {
             if (!activeCanvas) {
                 alert("దయచేసి ఈ-పేపర్ లోడ్ చేయండి.");
@@ -445,7 +455,6 @@
                 cropH = parseFloat(activeCropBox.style.height) * scaleRatio;
             }
 
-            // లోగో సైజు పెంచడం కోసం హెడర్ హైట్ కొద్దిగా సర్దుబాటు చేయబడింది
             const dynamicHeaderHeight = Math.max(120, Math.min(cropW * 0.32, 240));
             const outputCanvas = document.createElement('canvas');
             const outCtx = outputCanvas.getContext('2d');
