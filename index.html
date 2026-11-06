@@ -96,11 +96,11 @@
         }
         canvas { display: block; max-width: 100%; height: auto; }
         
-        /* Resizable Interactive Crop Box with Floating Action Bar */
+        /* Resizable Interactive Crop Box with Thinnest Border */
         .crop-box {
             position: absolute;
-            border: 2px dashed #007bff;
-            background-color: rgba(0, 123, 255, 0.15);
+            border: 1px dashed #007bff; /* బోర్డర్ గీతను సన్నగా (1px) మార్చడం జరిగింది */
+            background-color: rgba(0, 123, 255, 0.1);
             display: none;
             cursor: move;
             z-index: 50;
@@ -132,17 +132,17 @@
         .c-btn-wa { background-color: #25D366; color: white; }
 
         .crop-handle {
-            width: 16px;
-            height: 16px;
+            width: 14px;
+            height: 14px;
             background: #007bff;
             position: absolute;
             border: 2px solid white;
             border-radius: 50%;
         }
-        .handle-nw { top: -8px; left: -8px; cursor: nwse-resize; }
-        .handle-ne { top: -8px; right: -8px; cursor: nesw-resize; }
-        .handle-sw { bottom: -8px; left: -8px; cursor: nesw-resize; }
-        .handle-se { bottom: -8px; right: -8px; cursor: nwse-resize; }
+        .handle-nw { top: -7px; left: -7px; cursor: nwse-resize; }
+        .handle-ne { top: -7px; right: -7px; cursor: nesw-resize; }
+        .handle-sw { bottom: -7px; left: -7px; cursor: nesw-resize; }
+        .handle-se { bottom: -7px; right: -7px; cursor: nwse-resize; }
     </style>
 </head>
 <body>
@@ -288,7 +288,6 @@
                 }
 
                 wrapper.addEventListener('pointerdown', (e) => {
-                    // Only change active page if clicking outside the active crop box
                     if (!activeCropBox || !activeCropBox.contains(e.target)) {
                         setActivePage(wrapper, canvas, cropBox);
                     }
@@ -310,7 +309,6 @@
                     if (box !== activeCropBox) box.style.display = 'none';
                 });
                 
-                // Only initialize if not already positioned on this page
                 if (activeCropBox.style.display !== 'block') {
                     const w = activeCanvas.clientWidth * 0.8;
                     const h = activeCanvas.clientHeight * 0.4;
@@ -438,7 +436,6 @@
             });
         }
 
-        // Export Cropped News with Dynamic Logo Width
         function exportSelectedNews(actionType) {
             if (!activeCanvas) {
                 alert("దయచేసి ఈ-పేపర్ లోడ్ చేయండి.");
@@ -536,4 +533,5 @@
         }
     </script>
 </body>
-</html>
+    </html>
+    
