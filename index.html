@@ -99,7 +99,7 @@
         /* Resizable Interactive Crop Box with Thinnest Border */
         .crop-box {
             position: absolute;
-            border: 1px dashed #007bff; /* బోర్డర్ గీతను సన్నగా (1px) మార్చడం జరిగింది */
+            border: 1px dashed #007bff;
             background-color: rgba(0, 123, 255, 0.1);
             display: none;
             cursor: move;
@@ -436,6 +436,7 @@
             });
         }
 
+        // Export Cropped News with Prominent Large Logo
         function exportSelectedNews(actionType) {
             if (!activeCanvas) {
                 alert("దయచేసి ఈ-పేపర్ లోడ్ చేయండి.");
@@ -452,7 +453,8 @@
                 cropH = parseFloat(activeCropBox.style.height) * scaleRatio;
             }
 
-            const dynamicHeaderHeight = Math.max(120, Math.min(cropW * 0.32, 240));
+            // లోగో సైజు క్యాన్వాస్‌లో పెద్దదిగా మరియు స్పష్టంగా కనిపించడానికి హెడర్ హైట్ మరియు ఫిల్లింగ్ నిష్పత్తి పెంచబడింది
+            const dynamicHeaderHeight = Math.max(220, Math.min(cropW * 0.45, 380));
             const outputCanvas = document.createElement('canvas');
             const outCtx = outputCanvas.getContext('2d');
 
@@ -478,7 +480,7 @@
                 outCtx.fillRect(0, 0, outputCanvas.width, outputCanvas.height);
 
                 if (logoImg) {
-                    const padding = 15;
+                    const padding = 20;
                     const maxW = outputCanvas.width - (padding * 2);
                     const maxH = dynamicHeaderHeight - (padding * 2);
                     const logoAspectRatio = logoImg.width / logoImg.height;
@@ -533,5 +535,4 @@
         }
     </script>
 </body>
-    </html>
-    
+</html>
