@@ -7,7 +7,7 @@
     <meta property="og:type" content="website" />
     <meta property="og:title" content="యువగళం ఈ-పేపర్" />
     <meta property="og:description" content="యువగళం దినపత్రిక ఈ-పేపర్ వార్తలు చదవండి" />
-    <meta property="og:image" content="https://yuvagalam-epaper.onrender.com/yuvagalam-logo.jpg" />
+    <meta property="og:image" content="https://yuvagalam-epaper.onrender.com/yuvagalam-logo.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -436,7 +436,7 @@
             });
         }
 
-        // Export Cropped News with Doubled Logo Width & 3 Underlines
+        // Export Cropped News with Doubled Logo Width & 3 Underlines (.png matched)
         function exportSelectedNews(actionType) {
             if (!activeCanvas) {
                 alert("దయచేసి ఈ-పేపర్ లోడ్ చేయండి.");
@@ -453,7 +453,6 @@
                 cropH = parseFloat(activeCropBox.style.height) * scaleRatio;
             }
 
-            // లోగో సైజు మునుపటికంటే డబుల్ (పెద్దదిగా) ఉండేలా హెడర్ హైట్ పెంచబడింది
             const dynamicHeaderHeight = Math.max(280, Math.min(cropW * 0.60, 480));
             const outputCanvas = document.createElement('canvas');
             const outCtx = outputCanvas.getContext('2d');
@@ -465,8 +464,8 @@
             outputCanvas.height = cropH + dynamicHeaderHeight;
 
             const logo = new Image();
-            // కొత్త లోగో పేరు ఇక్కడ సెట్ చేయబడింది: yuvagalam-logo.jpg
-            logo.src = 'yuvagalam-logo.jpg?' + new Date().getTime();
+            // గిట్‌హబ్‌లో ఉన్న .png ఎక్స్‌టెన్షన్‌కి సరిగ్గా మ్యాచ్ చేయబడింది
+            logo.src = 'yuvagalam-logo.png?' + new Date().getTime();
 
             logo.onload = function() {
                 generateCanvas(logo);
@@ -482,7 +481,6 @@
 
                 if (logoImg) {
                     const padding = 15;
-                    // లోగో విడ్త్ డబుల్ సైజులో (అంటే దాదాపు పూర్తి వెడల్పుతో) వచ్చేలా సెట్ చేయబడింది
                     const maxW = outputCanvas.width - (padding * 2);
                     const maxH = dynamicHeaderHeight - 35 - (padding * 2);
                     const logoAspectRatio = logoImg.width / logoImg.height;
@@ -506,7 +504,7 @@
                     outCtx.fillText("యువగళం దినపత్రిక", outputCanvas.width / 2, dynamicHeaderHeight * 0.5);
                 }
 
-                // లోగోకి కింద సరిగ్గా అంచున తాకుతూ లెఫ్ట్ నుండి రైట్ చివరి వరకు 3 కలర్ అండర్‌లైన్స్ (ఎల్లో, వైట్, బ్లూ)
+                // లోగో కింద సరిగ్గా అంచున తాకుతూ లెఫ్ట్ నుండి రైట్ చివరి వరకు 3 కలర్ అండర్‌లైన్స్ (ఎల్లో, వైట్, బ్లూ)
                 const lineY = dynamicHeaderHeight - 20;
                 
                 // 1. ఎల్లో కలర్ లైన్
