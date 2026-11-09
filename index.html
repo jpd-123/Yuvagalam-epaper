@@ -7,7 +7,7 @@
     <meta property="og:type" content="website" />
     <meta property="og:title" content="యువగళం ఈ-పేపర్" />
     <meta property="og:description" content="యువగళం దినపత్రిక ఈ-పేపర్ వార్తలు చదవండి" />
-    <meta property="og:image" content="https://yuvagalam-epaper.onrender.com/logo.png.jpg" />
+    <meta property="og:image" content="https://yuvagalam-epaper.onrender.com/yuvagalam-logo.jpg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -436,7 +436,7 @@
             });
         }
 
-        // Export Cropped News with Prominent Large Logo
+        // Export Cropped News with Doubled Logo Width & 3 Underlines
         function exportSelectedNews(actionType) {
             if (!activeCanvas) {
                 alert("దయచేసి ఈ-పేపర్ లోడ్ చేయండి.");
@@ -453,8 +453,8 @@
                 cropH = parseFloat(activeCropBox.style.height) * scaleRatio;
             }
 
-            // లోగో సైజు క్యాన్వాస్‌లో పెద్దదిగా మరియు స్పష్టంగా కనిపించడానికి హెడర్ హైట్ మరియు ఫిల్లింగ్ నిష్పత్తి పెంచబడింది
-            const dynamicHeaderHeight = Math.max(220, Math.min(cropW * 0.45, 380));
+            // లోగో సైజు మునుపటికంటే డబుల్ (పెద్దదిగా) ఉండేలా హెడర్ హైట్ పెంచబడింది
+            const dynamicHeaderHeight = Math.max(280, Math.min(cropW * 0.60, 480));
             const outputCanvas = document.createElement('canvas');
             const outCtx = outputCanvas.getContext('2d');
 
@@ -465,7 +465,8 @@
             outputCanvas.height = cropH + dynamicHeaderHeight;
 
             const logo = new Image();
-            logo.src = 'logo.png.jpg?' + new Date().getTime();
+            // కొత్త లోగో పేరు ఇక్కడ సెట్ చేయబడింది: yuvagalam-logo.jpg
+            logo.src = 'yuvagalam-logo.jpg?' + new Date().getTime();
 
             logo.onload = function() {
                 generateCanvas(logo);
@@ -480,9 +481,10 @@
                 outCtx.fillRect(0, 0, outputCanvas.width, outputCanvas.height);
 
                 if (logoImg) {
-                    const padding = 20;
+                    const padding = 15;
+                    // లోగో విడ్త్ డబుల్ సైజులో (అంటే దాదాపు పూర్తి వెడల్పుతో) వచ్చేలా సెట్ చేయబడింది
                     const maxW = outputCanvas.width - (padding * 2);
-                    const maxH = dynamicHeaderHeight - (padding * 2);
+                    const maxH = dynamicHeaderHeight - 35 - (padding * 2);
                     const logoAspectRatio = logoImg.width / logoImg.height;
 
                     let drawWidth = maxW;
@@ -494,16 +496,32 @@
                     }
 
                     const posX = (outputCanvas.width - drawWidth) / 2;
-                    const posY = (dynamicHeaderHeight - drawHeight) / 2;
+                    const posY = 10;
 
                     outCtx.drawImage(logoImg, posX, posY, drawWidth, drawHeight);
                 } else {
                     outCtx.fillStyle = "#cc0000";
                     outCtx.font = "bold " + Math.round(dynamicHeaderHeight * 0.35) + "px Arial";
                     outCtx.textAlign = "center";
-                    outCtx.fillText("యువగళం దినపత్రిక", outputCanvas.width / 2, dynamicHeaderHeight * 0.6);
+                    outCtx.fillText("యువగళం దినపత్రిక", outputCanvas.width / 2, dynamicHeaderHeight * 0.5);
                 }
 
+                // లోగోకి కింద సరిగ్గా అంచున తాకుతూ లెఫ్ట్ నుండి రైట్ చివరి వరకు 3 కలర్ అండర్‌లైన్స్ (ఎల్లో, వైట్, బ్లూ)
+                const lineY = dynamicHeaderHeight - 20;
+                
+                // 1. ఎల్లో కలర్ లైన్
+                outCtx.fillStyle = "#FFCC00";
+                outCtx.fillRect(0, lineY, outputCanvas.width, 4);
+
+                // 2. వైట్ కలర్ లైన్
+                outCtx.fillStyle = "#FFFFFF";
+                outCtx.fillRect(0, lineY + 4, outputCanvas.width, 3);
+
+                // 3. బ్లూ కలర్ లైన్
+                outCtx.fillStyle = "#0055FF";
+                outCtx.fillRect(0, lineY + 7, outputCanvas.width, 4);
+
+                // వార్త క్రాప్ ఇమేజ్ డ్రా చేయడం
                 outCtx.drawImage(activeCanvas, cropX, cropY, cropW, cropH, 0, dynamicHeaderHeight, cropW, cropH);
 
                 if (actionType === 'download') {
