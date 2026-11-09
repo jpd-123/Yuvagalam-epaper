@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>యువగళం ఈ-పేపర్</title>
-    <!-- WhatsApp & Social Media Preview Meta Tags (యథావిధిగా సెట్ చేయబడ్డాయి) -->
+    <!-- WhatsApp & Social Media Preview Meta Tags (ఫైల్ పేరు సరిగ్గా మ్యాచ్ చేయబడింది) -->
     <meta property="og:type" content="website" />
     <meta property="og:title" content="యువగళం ఈ-పేపర్" />
     <meta property="og:description" content="యువగళం దినపత్రిక ఈ-పేపర్ వార్తలు చదవండి" />
@@ -437,7 +437,7 @@
             });
         }
 
-        // Export Cropped News with Triple Underlines & Restored Meta Tags
+        // Export Cropped News with Triple Underlines & Restored Logo Preview Meta Tags
         function exportSelectedNews(actionType) {
             if (!activeCanvas) {
                 alert("దయచేసి ఈ-పేపర్ లోడ్ చేయండి.");
@@ -504,18 +504,18 @@
                     outCtx.fillText("యువగళం దినపత్రిక", outputCanvas.width / 2, dynamicHeaderHeight * 0.5);
                 }
 
-                // లోగో కింద అండర్‌లైన్ గీతల మందం సుమారు మూడు రెట్లు (Triple thickness) పెంచబడింది
+                // లోగో కింద అండర్‌లైన్ గీతల మందం మూడు రెట్లు (Triple thickness)
                 const lineY = dynamicHeaderHeight - 25;
                 
-                // 1. ఎల్లో కలర్ లైన్ (మందం 12px)
+                // 1. ఎల్లో కలర్ లైన్
                 outCtx.fillStyle = "#FFCC00";
                 outCtx.fillRect(0, lineY, outputCanvas.width, 12);
 
-                // 2. వైట్ కలర్ లైన్ (మందం 9px)
+                // 2. వైట్ కలర్ లైన్
                 outCtx.fillStyle = "#FFFFFF";
                 outCtx.fillRect(0, lineY + 12, outputCanvas.width, 9);
 
-                // 3. బ్లూ కలర్ లైన్ (మందం 12px)
+                // 3. బ్లూ కలర్ లైన్
                 outCtx.fillStyle = "#0055FF";
                 outCtx.fillRect(0, lineY + 21, outputCanvas.width, 12);
 
