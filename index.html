@@ -4,14 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>యువగళం ఈ-పేపర్</title>
-    <!-- WhatsApp & Social Media Preview Meta Tags -->
+    
+    <!-- WhatsApp & Social Media Open Graph Meta Tags (ప్రివ్యూ కోసం ఖచ్చితమైన లింక్స్) -->
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="యువగళం ఈ-పేపర్" />
-    <meta property="og:description" content="యువగళం దినపత్రిక ఈ-పేపర్ వార్తలు చదవండి" />
+    <meta property="og:title" content="యువగళం ఈ-పేపర్ - దినపత్రిక" />
+    <meta property="og:description" content="యువగళం దినపత్రిక ఈ-పేపర్ తాజా వార్తలు చదవండి" />
     <meta property="og:image" content="https://yuvagalam-epaper.onrender.com/yuvagalam-logo.png" />
+    <meta property="og:url" content="https://yuvagalam-epaper.onrender.com/" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
+
     <!-- PDF.js Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <style>
@@ -165,6 +168,7 @@
 
         <div id="pages-container"></div>
     </div>
+
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
@@ -436,7 +440,7 @@
             });
         }
 
-        // Export Cropped News with Red, White, Blue Lines (Equal Size)
+        // Export Cropped News with Equal Red, White, Blue Lines
         function exportSelectedNews(actionType) {
             if (!activeCanvas) {
                 alert("దయచేసి ఈ-పేపర్ లోడ్ చేయండి.");
@@ -498,57 +502,4 @@
                     outCtx.drawImage(logoImg, posX, posY, drawWidth, drawHeight);
                 } else {
                     outCtx.fillStyle = "#cc0000";
-                    outCtx.font = "bold " + Math.round(dynamicHeaderHeight * 0.35) + "px Arial";
-                    outCtx.textAlign = "center";
-                    outCtx.fillText("యువగళం దినపత్రిక", outputCanvas.width / 2, dynamicHeaderHeight * 0.5);
-                }
-
-                // మూడు లైన్స్ ఒకే సైజులో (ప్రతి లైన్ మందం 10px) మరియు ఎరుపు, తెలుపు, నీలం రంగుల్లో
-                const lineY = dynamicHeaderHeight - 30;
-                const lineHeight = 10; // మూడు లైన్లకు సమానమైన మందం
-                
-                // 1. రెడ్ కలర్ లైన్
-                outCtx.fillStyle = "#FF0000";
-                outCtx.fillRect(0, lineY, outputCanvas.width, lineHeight);
-
-                // 2. వైట్ కలర్ లైన్
-                outCtx.fillStyle = "#FFFFFF";
-                outCtx.fillRect(0, lineY + lineHeight, outputCanvas.width, lineHeight);
-
-                // 3. బ్లూ కలర్ లైన్
-                outCtx.fillStyle = "#0055FF";
-                outCtx.fillRect(0, lineY + (lineHeight * 2), outputCanvas.width, lineHeight);
-
-                // వార్త క్రాప్ ఇమేజ్ డ్రా చేయడం
-                outCtx.drawImage(activeCanvas, cropX, cropY, cropW, cropH, 0, dynamicHeaderHeight, cropW, cropH);
-
-                if (actionType === 'download') {
-                    const link = document.createElement('a');
-                    link.download = 'Yuvagalam-News-' + Date.now() + '.png';
-                    link.href = outputCanvas.toDataURL('image/png');
-                    link.click();
-                } else if (actionType === 'whatsapp') {
-                    outputCanvas.toBlob(function(blob) {
-                        const file = new File([blob], 'Yuvagalam-News.png', { type: 'image/png' });
-                        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                            navigator.share({
-                                title: 'యువగళం వార్త',
-                                text: 'యువగళం దినపత్రిక వార్త చూడండి:',
-                                files: [file]
-                            }).catch(function() {});
-                        } else {
-                            shareFullEpaper();
-                        }
-                    });
-                }
-            }
-        }
-
-        function shareFullEpaper() {
-            const currentShareUrl = window.location.href;
-            const text = encodeURIComponent("యువగళం ఈ-పేపర్ వార్తలు చూడండి: " + currentShareUrl);
-            window.open('https://api.whatsapp.com/send?text=' + text, '_blank');
-        }
-    </script>
-</body>
-</html>
+                    outCtx.font = "bold " +
