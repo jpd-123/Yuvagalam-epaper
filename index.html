@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>యువగళం ఈ-పేపర్</title>
     
-    <!-- WhatsApp & Social Media Open Graph Meta Tags -->
+    <!-- WhatsApp & Social Media Open Graph Meta Tags (v=2 లాజిక్ జోడించబడింది) -->
     <meta property="og:type" content="website" />
     <meta property="og:title" content="యువగళం ఈ-పేపర్ - దినపత్రిక" />
     <meta property="og:description" content="యువగళం దినపత్రిక ఈ-పేపర్ తాజా వార్తలు చదవండి" />
-    <meta property="og:image" content="https://yuvagalam-epaper.onrender.com/yuvagalam-logo.png" />
+    <meta property="og:image" content="https://yuvagalam-epaper.onrender.com/yuvagalam-logo.png?v=2" />
     <meta property="og:url" content="https://yuvagalam-epaper.onrender.com/" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
@@ -100,7 +100,7 @@
         }
         canvas { display: block; max-width: 100%; height: auto; }
         
-        /* క్రాప్ చేసేటప్పుడు వచ్చే బోర్డర్ గీత అతి సన్నగా (Thinnest border) ఉండటానికి డాష్డ్ మరియు 1px కి మార్చబడింది */
+        /* క్రాప్ చేసేటప్పుడు వచ్చే బోర్డర్ గీత అతి సన్నగా (1px dashed) ఉండటానికి */
         .crop-box {
             position: absolute;
             border: 1px dashed #007bff;
@@ -440,7 +440,7 @@
             });
         }
 
-        // Export Cropped News with Equal Red, White, Blue Lines
+        // Export Cropped News with Symmetrical Blue Border & Equal Red, White, Blue Lines
         function exportSelectedNews(actionType) {
             if (!activeCanvas) {
                 alert("దయచేసి ఈ-పేపర్ లోడ్ చేయండి.");
@@ -526,6 +526,11 @@
                 // వార్త క్రాప్ ఇమేజ్ వేగంగా డ్రా చేయడం
                 outCtx.drawImage(activeCanvas, cropX, cropY, cropW, cropH, 0, dynamicHeaderHeight, cropW, cropH);
 
+                // క్రాప్ అయిన వార్త క్లిప్పింగ్ చుట్టూ చాలా సన్నగా, అందంగా బ్లూ కలర్ బోర్డర్ గీయడం (3px)
+                outCtx.strokeStyle = "#007bff";
+                outCtx.lineWidth = 3;
+                outCtx.strokeRect(1.5, 1.5, outputCanvas.width - 3, outputCanvas.height - 3);
+
                 if (actionType === 'download') {
                     const link = document.createElement('a');
                     link.download = 'Yuvagalam-News-' + Date.now() + '.png';
@@ -548,7 +553,6 @@
             }
         }
 
-        // వాట్సాప్ లింక్ షేర్ చేసేటప్పుడు ఏ పేపర్‌ అయితే ఓపెన్ అయిందో ఆ లింక్ (current PDF) సరిగ్గా షేర్ అయ్యేలా మార్చబడింది
         function shareFullEpaper() {
             const currentShareUrl = window.location.href;
             const text = encodeURIComponent("యువగళం ఈ-పేపర్ వార్తలు చూడండి: " + currentShareUrl);
