@@ -100,7 +100,6 @@
         }
         canvas { display: block; max-width: 100%; height: auto; }
         
-        /* క్రాప్ చేసిన బాక్స్ చుట్టూ బ్లూ కలర్ బోర్డర్ */
         .crop-box {
             position: absolute;
             border: 2px solid #007bff;
@@ -157,7 +156,6 @@
         <div style="text-align: left; font-weight: bold; margin-bottom: 8px;">PDF అప్‌లోడ్ చేయండి:</div>
         <input type="file" id="pdf-upload" accept="application/pdf" class="input-box">
         <button class="btn-process" onclick="uploadAndLoadPDF()">ఈ-పేపర్ లోడ్ చేయండి</button>
-        <!-- ఫైల్ అప్‌లోడ్ అవుతోంది మెసేజ్ లాజిక్ -->
         <p id="status-text" style="color: blue; display: none; margin-top: 10px; font-weight: bold;">ఫైల్ అప్‌లోడ్ అవుతోంది... దయచేసి వేచి ఉండండి.</p>
     </div>
 
@@ -441,7 +439,7 @@
             });
         }
 
-        // Fast Export Cropped News with Equal Red, White, Blue Lines
+        // Export Cropped News with Blue Border & Equal Red, White, Blue Lines
         function exportSelectedNews(actionType) {
             if (!activeCanvas) {
                 alert("దయచేసి ఈ-పేపర్ లోడ్ చేయండి.");
@@ -527,6 +525,11 @@
                 // వార్త క్రాప్ ఇమేజ్ వేగంగా డ్రా చేయడం
                 outCtx.drawImage(activeCanvas, cropX, cropY, cropW, cropH, 0, dynamicHeaderHeight, cropW, cropH);
 
+                // క్రాప్ అయిన వార్త క్లిప్పింగ్ చుట్టూ బ్లూ కలర్ బోర్డర్ (అవుట్‌లైన్) గీయడం
+                outCtx.strokeStyle = "#007bff";
+                outCtx.lineWidth = 6; // బోర్డర్ మందం
+                outCtx.strokeRect(3, 3, outputCanvas.width - 6, outputCanvas.height - 3);
+
                 if (actionType === 'download') {
                     const link = document.createElement('a');
                     link.download = 'Yuvagalam-News-' + Date.now() + '.png';
@@ -550,8 +553,9 @@
         }
 
         function shareFullEpaper() {
-            const baseShareUrl = window.location.protocol + "//" + window.location.host + "/";
-            const text = encodeURIComponent("యువగళం ఈ-పేపర్ వార్తలు చూడండి: " + baseShareUrl);
+            // లింక్ క్లిక్ చేసినప్పుడు మళ్లీ అప్లోడ్ అడగకుండా కరెంట్ PDF ఫైల్ పేరుతో సహా లింక్ షేర్ అయ్యేలా మార్చబడింది
+            const currentShareUrl = window.location.href;
+            const text = encodeURIComponent("యువగళం ఈ-పేపర్ వార్తలు చూడండి: " + currentShareUrl);
             window.open('https://api.whatsapp.com/send?text=' + text, '_blank');
         }
     </script>
