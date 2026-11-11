@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>యువగళం ఈ-పేపర్</title>
     
-    <!-- WhatsApp & Social Media Open Graph Meta Tags (ప్రివ్యూ కోసం ఖచ్చితమైన లింక్స్) -->
+    <!-- WhatsApp & Social Media Open Graph Meta Tags -->
     <meta property="og:type" content="website" />
     <meta property="og:title" content="యువగళం ఈ-పేపర్ - దినపత్రిక" />
     <meta property="og:description" content="యువగళం దినపత్రిక ఈ-పేపర్ తాజా వార్తలు చదవండి" />
@@ -100,9 +100,10 @@
         }
         canvas { display: block; max-width: 100%; height: auto; }
         
+        /* క్రాప్ చేసిన బాక్స్ చుట్టూ బ్లూ కలర్ బోర్డర్ */
         .crop-box {
             position: absolute;
-            border: 1px dashed #007bff;
+            border: 2px solid #007bff;
             background-color: rgba(0, 123, 255, 0.1);
             display: none;
             cursor: move;
@@ -267,7 +268,7 @@
 
                 const ctx = canvas.getContext('2d');
                 ctx.imageSmoothingEnabled = true;
-                ctx.imageSmoothingQuality = 'high';
+                ctx.imageSmoothingQuality = 'medium'; // వేగం పెంచడానికి ఆప్టిమైజ్ చేయబడింది
 
                 await page.render({ canvasContext: ctx, viewport: viewport }).promise;
 
@@ -440,7 +441,7 @@
             });
         }
 
-        // Export Cropped News with Equal Red, White, Blue Lines
+        // Fast Export Cropped News with Equal Red, White, Blue Lines
         function exportSelectedNews(actionType) {
             if (!activeCanvas) {
                 alert("దయచేసి ఈ-పేపర్ లోడ్ చేయండి.");
@@ -457,49 +458,4 @@
                 cropH = parseFloat(activeCropBox.style.height) * scaleRatio;
             }
 
-            const dynamicHeaderHeight = Math.max(280, Math.min(cropW * 0.60, 480));
-            const outputCanvas = document.createElement('canvas');
-            const outCtx = outputCanvas.getContext('2d');
-
-            outCtx.imageSmoothingEnabled = true;
-            outCtx.imageSmoothingQuality = 'high';
-
-            outputCanvas.width = cropW;
-            outputCanvas.height = cropH + dynamicHeaderHeight;
-
-            const logo = new Image();
-            logo.src = 'yuvagalam-logo.png?' + new Date().getTime();
-
-            logo.onload = function() {
-                generateCanvas(logo);
-            };
-
-            logo.onerror = function() {
-                generateCanvas(null);
-            };
-
-            function generateCanvas(logoImg) {
-                outCtx.fillStyle = '#ffffff';
-                outCtx.fillRect(0, 0, outputCanvas.width, outputCanvas.height);
-
-                if (logoImg) {
-                    const padding = 15;
-                    const maxW = outputCanvas.width - (padding * 2);
-                    const maxH = dynamicHeaderHeight - 45 - (padding * 2);
-                    const logoAspectRatio = logoImg.width / logoImg.height;
-
-                    let drawWidth = maxW;
-                    let drawHeight = drawWidth / logoAspectRatio;
-
-                    if (drawHeight > maxH) {
-                        drawHeight = maxH;
-                        drawWidth = drawHeight * logoAspectRatio;
-                    }
-
-                    const posX = (outputCanvas.width - drawWidth) / 2;
-                    const posY = 10;
-
-                    outCtx.drawImage(logoImg, posX, posY, drawWidth, drawHeight);
-                } else {
-                    outCtx.fillStyle = "#cc0000";
-                    outCtx.font = "bold " +
+            const dynamicHeaderHeight
