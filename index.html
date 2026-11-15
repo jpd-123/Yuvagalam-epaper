@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>యువగళం ఈ-పేపర్</title>
     
-    <!-- WhatsApp & Social Media Open Graph Meta Tags (ప్రివ్యూ కోసం పూర్తిగా ఆప్టిమైజ్ చేయబడింది) -->
+    <!-- WhatsApp & Social Media Open Graph Meta Tags -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="యువగళం ఈ-పేపర్" />
     <meta property="og:title" content="యువగళం ఈ-పేపర్ - దినపత్రిక" />
@@ -165,7 +165,7 @@
         <p id="status-text" style="color: blue; display: none; margin-top: 10px; font-weight: bold;">ఫైల్ అప్‌లోడ్ అవుతోంది... దయచేసి వేచి ఉండండి.</p>
     </div>
 
-    <!-- 2. Main Viewer Section (Home Page) -->
+    <!-- 2. Main Viewer Section -->
     <div id="viewer-section">
         <div class="header-bar">
             <button class="btn-action btn-crop" id="crop-toggle-btn" onclick="toggleCropMode()">✂️ వార్త క్రాప్ చేయండి</button>
@@ -245,7 +245,7 @@
             
             loadingTask.promise.then(loadPDFData).catch(err => {
                 console.error("PDF Load Error:", err);
-                alert("PDF లోడ్ చేయడంలో సమస్య వచ్చింది. దయచేసి పేజీని రిఫ్రెష్ చేసి మళ్ళీ ప్రయత్నించండి.");
+                alert("PDF లోడ్ చేయడంలో సమస్య వచ్చింది.");
             });
         }
 
@@ -445,7 +445,6 @@
             });
         }
 
-        // Export Cropped News with Thick Blue Border (10px matching underline) & Equal Red, White, Blue Lines
         function exportSelectedNews(actionType) {
             if (!activeCanvas) {
                 alert("దయచేసి ఈ-పేపర్ లోడ్ చేయండి.");
@@ -501,67 +500,89 @@
                         drawWidth = drawHeight * logoAspectRatio;
                     }
 
-                    const posX = (outputCanvas.width - drawWidth) / 2;
-                    const posY = 10;
-
-                    outCtx.drawImage(logoImg, posX, posY, drawWidth, drawHeight);
+                    const drawX = (outputCanvas.width - drawWidth) / 2;
+                    const drawY = 15 + (maxH - drawHeight) / 2;
+                    outCtx.drawImage(logoImg, drawX, drawY, drawWidth, drawHeight);
                 } else {
-                    outCtx.fillStyle = "#cc0000";
-                    outCtx.font = "bold " + Math.round(dynamicHeaderHeight * 0.35) + "px Arial";
-                    outCtx.textAlign = "center";
-                    outCtx.fillText("యువగళం దినపత్రిక", outputCanvas.width / 2, dynamicHeaderHeight * 0.5);
+                    outCtx.fillStyle = '#cc0000';
+                    outCtx.font = 'bold 36px Arial';
+                    outCtx.textAlign = 'center';
+                    outCtx.fillText('యువగళం ఈ-పేపర్', outputCanvas.width / 2, dynamicHeaderHeight / 2);
                 }
 
-                // మూడు లైన్స్ సమాన మందంతో (10px చొప్పున) ఎరుపు, తెలుపు, నీలం రంగుల్లో
-                const lineY = dynamicHeaderHeight - 30;
-                const lineHeight = 10;
+                const lineH = 4;
+                let currentY = dynamicHeaderHeight - (lineH * 3);
                 
-                // 1. రెడ్ కలర్ లైన్
-                outCtx.fillStyle = "#FF0000";
-                outCtx.fillRect(0, lineY, outputCanvas.width, lineHeight);
+                outCtx.fillStyle = '#cc0000'; 
+                outCtx.fillRect(0, currentY, outputCanvas.width, lineH);
+                currentY += lineH;
 
-                // 2. వైట్ కలర్ లైన్
-                outCtx.fillStyle = "#FFFFFF";
-                outCtx.fillRect(0, lineY + lineHeight, outputCanvas.width, lineHeight);
+                outCtx.fillStyle = '#ffffff'; 
+                outCtx.fillRect(0, currentY, outputCanvas.width, lineH);
+                currentY += lineH;
 
-                // 3. బ్లూ కలర్ లైన్
-                outCtx.fillStyle = "#0055FF";
-                outCtx.fillRect(0, lineY + (lineHeight * 2), outputCanvas.width, lineHeight);
+                outCtx.fillStyle = '#007bff'; 
+                outCtx.fillRect(0, currentY, outputCanvas.width, lineH);
 
-                // వార్త క్రాప్ ఇమేజ్ వేగంగా డ్రా చేయడం
-                outCtx.drawImage(activeCanvas, cropX, cropY, cropW, cropH, 0, dynamicHeaderHeight, cropW, cropH);
+                outCtx.drawImage(
+                    activeCanvas,
+                    cropX, cropY, cropW, cropH,
+                    0, dynamicHeaderHeight, cropW, cropH
+                );
 
-                // క్రాప్ అయిన వార్త క్లిప్పింగ్ చుట్టూ అండర్ లైన్ అంత మందంగా (10px) బ్లూ కలర్ బోర్డర్ గీయడం
-                outCtx.strokeStyle = "#0055FF";
+                outCtx.strokeStyle = '#007bff';
                 outCtx.lineWidth = 10;
-                outCtx.strokeRect(5, 5, outputCanvas.width - 10, outputCanvas.height - 10);
+                outCtx.strokeRect(0, 0, outputCanvas.width, outputCanvas.height);
 
-                if (actionType === 'download') {
-                    const link = document.createElement('a');
-                    link.download = 'Yuvagalam-News-' + Date.now() + '.png';
-                    link.href = outputCanvas.toDataURL('image/png', 0.9);
-                    link.click();
-                } else if (actionType === 'whatsapp') {
-                    outputCanvas.toBlob(function(blob) {
-                        const file = new File([blob], 'Yuvagalam-News.png', { type: 'image/png' });
+                outputCanvas.toBlob(async (blob) => {
+                    if (!blob) return;
+                    const file = new File([blob], "yuvagalam-news-clip.png", { type: "image/png" });
+
+                    if (actionType === 'download') {
+                        const link = document.createElement('a');
+                        link.href = URL.createObjectURL(blob);
+                        link.download = 'yuvagalam-news-clip.png';
+                        link.click();
+                    } else if (actionType === 'whatsapp') {
                         if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                            navigator.share({
+                            try {
+                                await navigator.share({
+                                files: [file],
                                 title: 'యువగళం వార్త',
-                                text: 'యువగళం దినపత్రిక వార్త చూడండి:',
-                                files: [file]
-                            }).catch(function() {});
+                                text: 'యువగళం దినపత్రిక నుండి సేకరించిన వార్త కట్టింగ్.'
+                            });
+                            } catch (err) {
+                                console.log('Share failed', err);
+                            }
                         } else {
-                            shareFullEpaper();
+                            const link = document.createElement('a');
+                            link.href = URL.createObjectURL(blob);
+                            link.download = 'yuvagalam-news-clip.png';
+                            link.click();
+                            alert("ఇమేజ్ డౌన్‌లోడ్ చేయబడింది. దాన్ని WhatsApp లో షేర్ చేయండి.");
                         }
-                    }, 'image/png', 0.9);
-                }
+                    }
+                }, 'image/png');
             }
         }
 
         function shareFullEpaper() {
-            const currentShareUrl = window.location.href;
-            const text = encodeURIComponent("యువగళం ఈ-పేపర్ వార్తలు చూడండి: " + currentShareUrl);
-            window.open('https://api.whatsapp.com/send?text=' + text, '_blank');
+            if (!currentFileName) {
+                alert("ఈ-పేపర్ అందుబాటులో లేదు.");
+                return;
+            }
+            const shareUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?pdf=' + encodeURIComponent(currentFileName);
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: 'యువగళం ఈ-పేపర్',
+                    text: 'యువగళం దినపత్రిక ఈ-పేపర్ తాజా వార్తలు చదవండి:',
+                    url: shareUrl
+                }).catch(err => console.log('Error sharing:', err));
+            } else {
+                navigator.clipboard.writeText(shareUrl);
+                alert("ఈ-పేపర్ లింక్ కాపీ చేయబడింది! మీరు దాన్ని WhatsApp లో షేర్ చేయవచ్చు.");
+            }
         }
     </script>
 </body>
