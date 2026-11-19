@@ -50,6 +50,7 @@ app.post('/api/upload', upload.single('pdf'), (req, res) => {
     const fileUrl = `/uploads/${req.file.filename}`;
     res.json({ success: true, url: fileUrl, filename: req.file.filename });
 });
+
 // WhatsApp Dynamic Link Meta Tags Route
 app.get('/', (req, res) => {
     const pdfFile = req.query.pdf;
@@ -61,10 +62,9 @@ app.get('/', (req, res) => {
         }
         
         if (pdfFile) {
-            // PDF ఫైల్ ఉంటే డిఫాల్ట్ లోగో ఇమేజ్ స్థానంలో పబ్లిక్ లింక్ ద్వారా సర్వ్ అవుతుంది
-            const dynamicOgImage = `https://${req.get('host')}/logo.png.jpg`;
-            let updatedHtml = htmlData.replace(
-                'https://yuvagalam-epaper.onrender.com/logo.png.jpg',
+            const dynamicOgImage = `https://${req.get('host')}/yuvagalam-logo.png`;
+            let updatedHtml = htmlData.replaceAll(
+                'https://yuvagalam-epaper.onrender.com/yuvagalam-logo.png',
                 dynamicOgImage
             );
             return res.send(updatedHtml);
@@ -73,6 +73,7 @@ app.get('/', (req, res) => {
         res.send(htmlData);
     });
 });
+
 // CRON JOB: Every day at midnight (00:00), delete files older than 5 days
 cron.schedule('0 0 * * *', () => {
     console.log('5 రోజుల కంటే పాత PDFల డిలీషన్ చెక్ చేస్తున్నాం...');
