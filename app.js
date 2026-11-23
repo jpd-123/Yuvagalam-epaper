@@ -1,8 +1,11 @@
 const express = require('express');
 const multer = require('multer');
+const express = require('express');
+const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const cron = require('node-cron');
+const { pdfToPng } = require('pdf-to-png-converter');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -31,7 +34,7 @@ const storage = multer.diskStorage({
     }
 });
 
-const upload = multer({ 
+const upload = multer({
     storage: storage,
     limits: { fileSize: 50 * 1024 * 1024 } // 50MB వరకు అనుమతి
 });
@@ -40,12 +43,37 @@ const upload = multer({
 app.use(express.static(__dirname));
 app.use('/uploads', express.static(UPLOAD_DIR));
 
+// Helper: PDF మొదటి పేజీని latest-page1.png గా సేవ్ చేయడం
+async function generateFirstPagePreview(pdfPath) {
+    try {
+        const pngPages = await pdfToPng(pdfPath, {
+            pagesToProcess: [1],
+            viewportScale: 1.5,
+            disableFontFace: false,
+            useSystemFonts: false
+        });
+
+        if (pngPages && pngPages.length > 0 && pngPages[0].content) {
+            const previewPath = path.join(__dirname, 'latest-page1.png');
+            fs.writeFileSync(previewPath, pngPages[0].content);
+            console.log('మొదటి పేజీ ప్రివ్యూ సేవ్ అయ్యింది: latest-page1.png');
+            return true;
+        }
+    } catch (err) {
+        console.error('మొదటి పేజీ ఇమేజ్ మార్చడంలో లోపం:', err.message);
+    }
+    return false;
+}
+
 // API 1: PDF Upload Endpoint
-app.post('/api/upload', upload.single('pdf'), (req, res) => {
+app.post('/api/upload', upload.single('pdf'), async (req, res) => {
     if (!req.file) {
         return res.status(400).json({ success: false, message: 'pdf అప్‌లోడ్ కాలేదు' });
     }
-    
+
+    const uploadedFilePath = path.join(UPLOAD_DIR, req.file.filename);
+    await generateFirstPagePreview(uploadedFilePath);
+
     // Relative Path ఇవ్వడం వల్ల HTTP/HTTPS ప్రొటోకాల్ సమస్య రాదు
     const fileUrl = `/uploads/${req.file.filename}`;
     res.json({ success: true, url: fileUrl, filename: req.file.filename });
@@ -55,21 +83,25 @@ app.post('/api/upload', upload.single('pdf'), (req, res) => {
 app.get('/', (req, res) => {
     const pdfFile = req.query.pdf;
     const indexPath = path.join(__dirname, 'index.html');
-    
+
     fs.readFile(indexPath, 'utf8', (err, htmlData) => {
         if (err) {
             return res.status(500).send('Error loading page');
         }
-        
+
         if (pdfFile) {
-            const dynamicOgImage = `https://${req.get('host')}/yuvagalam-logo.png`;
+            const previewExists = fs.existsSync(path.join(__dirname, 'latest-page1.png'));
+            const imageFile = previewExists ? 'latest-page1.png' : 'yuvagalam-logo.png';
+            const versionTag = encodeURIComponent(pdfFile);
+            const dynamicOgImage = `https://${req.get('host')}/${imageFile}?v=${versionTag}`;
+
             let updatedHtml = htmlData.replaceAll(
                 'https://yuvagalam-epaper.onrender.com/yuvagalam-logo.png',
                 dynamicOgImage
             );
             return res.send(updatedHtml);
         }
-        
+
         res.send(htmlData);
     });
 });
