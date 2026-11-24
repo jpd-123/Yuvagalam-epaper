@@ -15,7 +15,6 @@
     <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:url" content="https://yuvagalam-epaper.onrender.com/" />
     <meta property="og:image:alt" content="యువగళం లోగో" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="యువగళం ఈ-పేపర్" />
@@ -86,6 +85,22 @@
         }
         .btn-crop { background-color: #007bff; color: white; }
         .btn-whatsapp { background-color: #25D366; color: white; }
+
+        #download-toast {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #1e293b;
+            color: #ffffff;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            z-index: 2000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+        }
         
         #pages-container {
             display: flex;
@@ -175,6 +190,9 @@
 
         <div id="pages-container"></div>
     </div>
+
+    <div id="download-toast">డౌన్‌లోడ్ అవుతోంది... వేచి ఉండండి.</div>
+
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
@@ -184,6 +202,18 @@
         let activeCanvas = null;
         let activeCropBox = null;
         let currentFileName = "";
+        let toastTimer = null;
+
+        function showToast(msg, duration) {
+            const toast = document.getElementById('download-toast');
+            if (!toast) return;
+            toast.innerText = msg;
+            toast.style.display = 'block';
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                toast.style.display = 'none';
+            }, duration || 3000);
+        }
 
         window.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
@@ -236,7 +266,6 @@
                 statusText.style.display = 'none';
             }
         }
-
         function renderPDFFromUrl(url) {
             const loadingTask = pdfjsLib.getDocument({
                 url: url,
@@ -452,6 +481,10 @@
                 return;
             }
 
+            if (actionType === 'download') {
+                showToast("డౌన్‌లోడ్ అవుతోంది... వేచి ఉండండి.", 4000);
+            }
+
             const scaleRatio = activeCanvas.width / activeCanvas.clientWidth;
             let cropX = 0, cropY = 0, cropW = activeCanvas.width, cropH = activeCanvas.height;
 
@@ -462,18 +495,24 @@
                 cropH = parseFloat(activeCropBox.style.height) * scaleRatio;
             }
 
-            const dynamicHeaderHeight = Math.max(280, Math.min(cropW * 0.60, 480));
+            // చాలా పెద్ద క్రాప్ అయితే వేగం కోసం గరిష్ట వెడల్పు 1600px కి పరిమితం చేస్తుంది
+            const maxOutputWidth = 1600;
+            const exportScale = cropW > maxOutputWidth ? (maxOutputWidth / cropW) : 1;
+            const outW = Math.round(cropW * exportScale);
+            const outH = Math.round(cropH * exportScale);
+
+            const dynamicHeaderHeight = Math.round(Math.max(160, Math.min(outW * 0.45, 320)));
             const outputCanvas = document.createElement('canvas');
             const outCtx = outputCanvas.getContext('2d');
 
             outCtx.imageSmoothingEnabled = true;
-            outCtx.imageSmoothingQuality = 'medium';
+            outCtx.imageSmoothingQuality = 'high';
 
-            outputCanvas.width = cropW;
-            outputCanvas.height = cropH + dynamicHeaderHeight;
+            outputCanvas.width = outW;
+            outputCanvas.height = outH + dynamicHeaderHeight;
 
             const logo = new Image();
-            logo.src = 'yuvagalam-logo.png?' + new Date().getTime();
+            logo.src = 'yuvagalam-logo.png';
 
             logo.onload = function() {
                 generateCanvas(logo);
@@ -488,9 +527,9 @@
                 outCtx.fillRect(0, 0, outputCanvas.width, outputCanvas.height);
 
                 if (logoImg) {
-                    const padding = 15;
+                    const padding = 12;
                     const maxW = outputCanvas.width - (padding * 2);
-                    const maxH = dynamicHeaderHeight - 45 - (padding * 2);
+                    const maxH = dynamicHeaderHeight - 30 - (padding * 2);
                     const logoAspectRatio = logoImg.width / logoImg.height;
 
                     let drawWidth = maxW;
@@ -502,11 +541,11 @@
                     }
 
                     const drawX = (outputCanvas.width - drawWidth) / 2;
-                    const drawY = 15 + (maxH - drawHeight) / 2;
+                    const drawY = 10 + (maxH - drawHeight) / 2;
                     outCtx.drawImage(logoImg, drawX, drawY, drawWidth, drawHeight);
                 } else {
                     outCtx.fillStyle = '#cc0000';
-                    outCtx.font = 'bold 36px Arial';
+                    outCtx.font = 'bold 32px Arial';
                     outCtx.textAlign = 'center';
                     outCtx.fillText('యువగళం ఈ-పేపర్', outputCanvas.width / 2, dynamicHeaderHeight / 2);
                 }
@@ -528,11 +567,11 @@
                 outCtx.drawImage(
                     activeCanvas,
                     cropX, cropY, cropW, cropH,
-                    0, dynamicHeaderHeight, cropW, cropH
+                    0, dynamicHeaderHeight, outW, outH
                 );
 
                 outCtx.strokeStyle = '#007bff';
-                outCtx.lineWidth = 10;
+                outCtx.lineWidth = 8;
                 outCtx.strokeRect(0, 0, outputCanvas.width, outputCanvas.height);
 
                 outputCanvas.toBlob(async (blob) => {
@@ -540,10 +579,18 @@
                     const file = new File([blob], "yuvagalam-news-clip.png", { type: "image/png" });
 
                     if (actionType === 'download') {
+                        const blobUrl = URL.createObjectURL(blob);
                         const link = document.createElement('a');
-                        link.href = URL.createObjectURL(blob);
+                        link.style.display = 'none';
+                        link.href = blobUrl;
                         link.download = 'yuvagalam-news-clip.png';
+                        document.body.appendChild(link);
                         link.click();
+                        setTimeout(() => {
+                            document.body.removeChild(link);
+                            URL.revokeObjectURL(blobUrl);
+                            showToast("డౌన్‌లోడ్ పూర్తయింది!", 2000);
+                        }, 1500);
                     } else if (actionType === 'whatsapp') {
                         if (navigator.canShare && navigator.canShare({ files: [file] })) {
                             try {
@@ -556,14 +603,21 @@
                                 console.log('Share failed', err);
                             }
                         } else {
+                            const blobUrl = URL.createObjectURL(blob);
                             const link = document.createElement('a');
-                            link.href = URL.createObjectURL(blob);
+                            link.style.display = 'none';
+                            link.href = blobUrl;
                             link.download = 'yuvagalam-news-clip.png';
+                            document.body.appendChild(link);
                             link.click();
+                            setTimeout(() => {
+                                document.body.removeChild(link);
+                                URL.revokeObjectURL(blobUrl);
+                            }, 1500);
                             alert("ఇమేజ్ డౌన్‌లోడ్ చేయబడింది. దాన్ని WhatsApp లో షేర్ చేయండి.");
                         }
                     }
-                }, 'image/png');
+                }, 'image/png', 0.85);
             }
         }
 
